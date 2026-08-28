@@ -19,25 +19,11 @@ const PRODUCT_ASSETS = {
   },
 };
 
-const PRODUCT_MASKS = {
-  tshirt: {
-    front: [[.38, .088], [.62, .088], [.80, .156], [.955, .35], [.78, .425], [.746, .345], [.746, .92], [.254, .92], [.254, .345], [.22, .425], [.045, .35], [.20, .156]],
-    back: [[.39, .075], [.61, .075], [.775, .15], [.955, .35], [.78, .425], [.745, .34], [.725, .90], [.62, .93], [.38, .93], [.275, .90], [.255, .34], [.22, .425], [.045, .35], [.225, .15]],
-  },
-  hoodie: {
-    front: [[.37, .065], [.63, .065], [.70, .18], [.82, .20], [.90, .32], [.95, .80], [.93, .88], [.83, .90], [.82, .85], [.75, .88], [.73, .94], [.27, .94], [.25, .88], [.18, .85], [.17, .90], [.07, .88], [.05, .80], [.10, .32], [.18, .20], [.30, .18]],
-    back: [[.37, .01], [.63, .01], [.70, .10], [.68, .20], [.80, .20], [.90, .32], [.94, .80], [.92, .88], [.82, .90], [.81, .84], [.74, .88], [.72, .94], [.28, .94], [.26, .88], [.19, .84], [.18, .90], [.08, .88], [.06, .80], [.10, .32], [.20, .20], [.32, .20], [.30, .10]],
-  },
-  polo: {
-    front: [[.40, .047], [.60, .047], [.72, .12], [.86, .19], [.95, .42], [.78, .48], [.73, .43], [.72, .95], [.28, .95], [.27, .43], [.22, .48], [.05, .42], [.14, .19], [.28, .12]],
-    back: [[.40, .01], [.60, .01], [.75, .08], [.87, .15], [.94, .40], [.78, .48], [.72, .42], [.72, .94], [.28, .94], [.28, .42], [.22, .48], [.06, .40], [.13, .15], [.25, .08]],
-  },
-};
-
 function assetSources(product, side, colorSlug) {
   const folder = product === 'tshirt' ? 'gildan-64000' : product;
   const base = PRODUCT_ASSETS[product]?.[side];
-  return [`/mockups/${folder}/${colorSlug}/${side}.jpg`, base].filter(Boolean);
+  if (colorSlug === 'white') return [base].filter(Boolean);
+  return [`/mockups/${folder}/${colorSlug}/${side}.jpg`];
 }
 
 function loadImage(source) {
@@ -59,65 +45,60 @@ function productLabel(product) {
 }
 
 function FallbackGarment({ product, color }) {
-  const tote = product === 'tote';
   return (
     <svg viewBox="0 0 100 125" className="absolute inset-0 h-full w-full" aria-hidden="true">
       <defs><filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity=".22" /></filter><linearGradient id="fabric" x1="0" x2="1" y1="0" y2="1"><stop stopColor="white" stopOpacity=".18" /><stop offset="1" stopColor="black" stopOpacity=".12" /></linearGradient></defs>
-      {tote ? <g filter="url(#shadow)"><path d="M24 32h52l-5 68H29z" fill={color} /><path d="M36 34c0-20 28-20 28 0" fill="none" stroke={color} strokeWidth="5" /><path d="M24 32h52l-5 68H29z" fill="url(#fabric)" /></g> : <g filter="url(#shadow)"><path d="M36 14c4 7 24 7 28 0l15 10 13 25-15 10-6-15v63H29V44l-6 16L8 50l13-25z" fill={color} /><path d="M36 14c4 7 24 7 28 0l15 10 13 25-15 10-6-15v63H29V44l-6 16L8 50l13-25z" fill="url(#fabric)" /></g>}
+      {product === 'tote' ? <g filter="url(#shadow)"><path d="M24 32h52l-5 68H29z" fill={color} /><path d="M36 34c0-20 28-20 28 0" fill="none" stroke={color} strokeWidth="5" /><path d="M24 32h52l-5 68H29z" fill="url(#fabric)" /></g> : null}
+      {product === 'hoodie' ? <g filter="url(#shadow)"><path d="M34 14c-2-15 34-15 32 0l9 9 12 5 8 23-13 6-6-13v56H24V44l-6 13-13-6 8-23 12-5z" fill={color} /><path d="M35 14c2 12 28 12 30 0" fill="none" stroke="white" strokeOpacity=".22" strokeWidth="3" /><path d="M31 73h38l-5 15H36z" fill="url(#fabric)" /><path d="M24 100h52" stroke="black" strokeOpacity=".16" strokeWidth="2" /></g> : null}
+      {product === 'polo' ? <g filter="url(#shadow)"><path d="M37 14h26l16 10 14 26-15 8-6-14v58H28V44l-6 14-15-8 14-26z" fill={color} /><path d="M38 14l12 16 12-16" fill="none" stroke="white" strokeOpacity=".32" strokeWidth="3" /><path d="M50 30v18" stroke="black" strokeOpacity=".22" strokeWidth="2" /><circle cx="50" cy="36" r="1.5" fill="white" fillOpacity=".7" /><circle cx="50" cy="43" r="1.5" fill="white" fillOpacity=".7" /><path d="M37 14h26l16 10 14 26-15 8-6-14v58H28V44l-6 14-15-8 14-26z" fill="url(#fabric)" /></g> : null}
+      {product === 'tshirt' ? <g filter="url(#shadow)"><path d="M36 14c4 7 24 7 28 0l15 10 13 25-15 10-6-15v63H29V44l-6 16L8 50l13-25z" fill={color} /><path d="M36 14c4 7 24 7 28 0l15 10 13 25-15 10-6-15v63H29V44l-6 16L8 50l13-25z" fill="url(#fabric)" /></g> : null}
     </svg>
   );
 }
 
-function bounded(value) {
-  return Math.min(92, Math.max(8, value));
-}
-
-function tintGarment(context, product, side, color, width, height) {
-  const productMask = PRODUCT_MASKS[product];
-  const mask = productMask?.[side] ?? productMask;
-  const points = Array.isArray(mask) ? mask : mask?.points;
-  if (!points || color === '#ffffff') return;
+function drawFallbackGarment(context, product, color, width, height) {
+  const scaleX = width / 100;
+  const scaleY = height / 125;
   context.save();
-  context.beginPath();
-  points.forEach(([x, y], index) => {
-    if (index === 0) context.moveTo(width * x, height * y);
-    else context.lineTo(width * x, height * y);
-  });
-  context.closePath();
-  context.clip();
-  context.globalCompositeOperation = 'multiply';
+  context.scale(scaleX, scaleY);
+  context.shadowColor = 'rgba(15, 23, 42, .22)';
+  context.shadowBlur = 2;
+  context.shadowOffsetY = 2;
   context.fillStyle = color;
-  context.fillRect(0, 0, width, height);
+  context.beginPath();
+
+  if (product === 'tote') {
+    context.rect(24, 32, 52, 68);
+  } else if (product === 'hoodie') {
+    context.moveTo(34, 14); context.bezierCurveTo(32, -1, 68, -1, 66, 14);
+    context.lineTo(75, 23); context.lineTo(87, 28); context.lineTo(95, 51); context.lineTo(82, 57); context.lineTo(76, 44);
+    context.lineTo(76, 100); context.lineTo(24, 100); context.lineTo(24, 44); context.lineTo(18, 57); context.lineTo(5, 51);
+    context.lineTo(13, 28); context.lineTo(25, 23); context.closePath();
+  } else if (product === 'polo') {
+    context.moveTo(37, 14); context.lineTo(63, 14); context.lineTo(79, 24); context.lineTo(93, 50); context.lineTo(78, 58);
+    context.lineTo(72, 44); context.lineTo(72, 102); context.lineTo(28, 102); context.lineTo(28, 44); context.lineTo(22, 58);
+    context.lineTo(7, 50); context.lineTo(21, 24); context.closePath();
+  } else {
+    context.moveTo(36, 14); context.bezierCurveTo(40, 21, 60, 21, 64, 14); context.lineTo(79, 24); context.lineTo(92, 49);
+    context.lineTo(77, 59); context.lineTo(71, 44); context.lineTo(71, 107); context.lineTo(29, 107); context.lineTo(29, 44);
+    context.lineTo(23, 60); context.lineTo(8, 50); context.lineTo(21, 25); context.closePath();
+  }
+  context.fill();
+  context.shadowColor = 'transparent';
+
+  if (product === 'hoodie') {
+    context.strokeStyle = 'rgba(255,255,255,.22)'; context.lineWidth = 3; context.beginPath(); context.moveTo(35, 14); context.bezierCurveTo(37, 26, 63, 26, 65, 14); context.stroke();
+    context.fillStyle = 'rgba(0,0,0,.12)'; context.fillRect(31, 73, 38, 15);
+  } else if (product === 'polo') {
+    context.strokeStyle = 'rgba(255,255,255,.32)'; context.lineWidth = 3; context.beginPath(); context.moveTo(38, 14); context.lineTo(50, 30); context.lineTo(62, 14); context.stroke();
+  } else if (product === 'tote') {
+    context.strokeStyle = color; context.lineWidth = 5; context.beginPath(); context.arc(50, 34, 14, Math.PI, 0); context.stroke();
+  }
   context.restore();
 }
 
-function drawMockupPhoto(context, image, product, side, color, width, height, shouldTint) {
-  context.drawImage(image, 0, 0, width, height);
-  if (shouldTint) tintGarment(context, product, side, color, width, height);
-}
-
-function ProductPhoto({ asset, product, side, garmentColor, shouldTint, onError }) {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const image = new Image();
-    image.onload = () => {
-      if (cancelled || !canvasRef.current) return;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      canvas.width = image.naturalWidth;
-      canvas.height = image.naturalHeight;
-      drawMockupPhoto(context, image, product, side, garmentColor, canvas.width, canvas.height, shouldTint);
-    };
-    image.onerror = () => {
-      if (!cancelled) onError();
-    };
-    image.src = asset;
-    return () => { cancelled = true; };
-  }, [asset, garmentColor, onError, product, shouldTint, side]);
-
-  return <canvas ref={canvasRef} role="img" aria-label={`${productLabel(product)} ${side} view`} className="absolute inset-0 h-full w-full object-cover" />;
+function bounded(value) {
+  return Math.min(92, Math.max(8, value));
 }
 
 function wrapText(context, value, maxWidth) {
@@ -161,7 +142,6 @@ const MockupCanvas = forwardRef(function MockupCanvas({
   const asset = sources[assetIndex];
   const isPhotoMockup = Boolean(asset);
   const hasText = Boolean(textValue?.trim());
-  const usesColorSpecificPhoto = assetIndex === 0 && colorSlug !== 'white';
 
   useEffect(() => { setAssetIndex(0); }, [product, side, colorSlug]);
 
@@ -178,10 +158,9 @@ const MockupCanvas = forwardRef(function MockupCanvas({
 
       try {
         const mockup = await loadImage(asset);
-        drawMockupPhoto(context, mockup, product, side, garmentColor, width, height, !usesColorSpecificPhoto);
+        context.drawImage(mockup, 0, 0, width, height);
       } catch {
-        context.fillStyle = garmentColor;
-        context.fillRect(width * .27, height * .15, width * .46, height * .72);
+        drawFallbackGarment(context, product, garmentColor, width, height);
       }
 
       if (designImage) {
@@ -214,7 +193,7 @@ const MockupCanvas = forwardRef(function MockupCanvas({
 
       return canvas.toDataURL('image/png');
     },
-  }), [asset, designImage, designScale, garmentColor, hasText, placement, position, product, rotation, side, textColor, textFont, textPosition, textSize, textValue, usesColorSpecificPhoto]);
+  }), [asset, designImage, designScale, garmentColor, hasText, placement, position, product, rotation, side, textColor, textFont, textPosition, textSize, textValue]);
 
   const startDrag = (event, layer) => {
     const currentPosition = layer === 'text' ? textPosition : position;
@@ -256,7 +235,7 @@ const MockupCanvas = forwardRef(function MockupCanvas({
     <div className="mx-auto w-full max-w-[600px]">
       <div ref={previewRef} className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-slate-100 shadow-inner" aria-label={`${productLabel(product)} ${side} mockup`}>
         {isPhotoMockup ? <>
-          <ProductPhoto asset={asset} product={product} side={side} garmentColor={garmentColor} shouldTint={!usesColorSpecificPhoto} onError={() => setAssetIndex((current) => current + 1)} />
+          <img src={asset} alt={`${productLabel(product)} ${side} view`} className="absolute inset-0 h-full w-full object-cover" onError={() => setAssetIndex((current) => current + 1)} />
         </> : <><FallbackGarment product={product} color={garmentColor} /><div className="absolute inset-x-8 bottom-5 rounded-lg bg-white/90 px-3 py-2 text-center text-xs text-slate-600 shadow-sm">Add <code className="font-mono">public/mockups/{product === 'tshirt' ? 'gildan-64000' : product}/{colorSlug}/{side}.jpg</code> for this photo mockup.</div></>}
 
         <div className="pointer-events-none absolute border-2 border-dashed border-primary/70 bg-primary/10" style={{ left: `${placement.x - placement.width / 2}%`, top: `${placement.y - placement.height / 2}%`, width: `${placement.width}%`, height: `${placement.height}%` }}><span className="absolute -top-6 left-0 whitespace-nowrap rounded bg-primary px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">{placement.name} · up to {placement.size}</span></div>
