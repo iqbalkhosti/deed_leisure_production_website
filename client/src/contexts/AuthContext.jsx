@@ -13,25 +13,28 @@ export function AuthProvider({ children }) {
   const [userRole, setUserRole]   = useState(null);
   const [userClubId, setUserClubId] = useState(null);
   const [isExecApproved, setIsExecApproved] = useState(false);
+  const [profileName, setProfileName] = useState('');
   const [loading, setLoading]     = useState(true);
 
   // Fetch extended user profile (role, club_id) from users table
-  async function fetchProfile(userId) {
+  async function fetchProfile(userId, metadataName = '') {
     if (!userId) {
       setUserRole(null);
       setUserClubId(null);
       setIsExecApproved(false);
+      setProfileName('');
       return;
     }
     const { data } = await supabase
       .from('users')
-      .select('role, club_id, is_exec_approved')
+      .select('role, club_id, is_exec_approved, full_name')
       .eq('id', userId)
       .single();
 
     setUserRole(data?.role ?? null);
     setUserClubId(data?.club_id ?? null);
     setIsExecApproved(data?.is_exec_approved ?? false);
+    setProfileName(data?.full_name || metadataName || '');
   }
 
   useEffect(() => {
@@ -39,14 +42,14 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      fetchProfile(s?.user?.id ?? null).finally(() => setLoading(false));
+      fetchProfile(s?.user?.id ?? null, s?.user?.user_metadata?.full_name).finally(() => setLoading(false));
     });
 
     // Listen for auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
-      fetchProfile(s?.user?.id ?? null);
+      fetchProfile(s?.user?.id ?? null, s?.user?.user_metadata?.full_name);
     });
 
     return () => subscription.unsubscribe();
@@ -58,7 +61,7 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function signUp(email, password, role = 'student', clubId = null) {
+  async function signUp(email, password, fullName, role = 'student', clubId = null) {
     // Pass role + club_id as metadata so the DB trigger can create the
     // public.users row without needing an active session (bypasses RLS).
     const { data, error } = await supabase.auth.signUp({
@@ -66,11 +69,24 @@ export function AuthProvider({ children }) {
       password,
       options: {
         data: {
+          full_name: fullName.trim(),
           role,
           club_id: clubId || '',
         },
       },
     });
+    if (error) throw error;
+    return data;
+  }
+
+  async function verifySignUpCode(email, token) {
+    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    if (error) throw error;
+    return data;
+  }
+
+  async function resendSignUpCode(email) {
+    const { data, error } = await supabase.auth.resend({ type: 'signup', email });
     if (error) throw error;
     return data;
   }
@@ -85,9 +101,12 @@ export function AuthProvider({ children }) {
     userRole,
     userClubId,
     isExecApproved,
+    profileName,
     loading,
     signIn,
     signUp,
+    verifySignUpCode,
+    resendSignUpCode,
     signOut,
     isAdmin: userRole === 'admin',
     isExec: userRole === 'club_exec' && isExecApproved,

@@ -64,7 +64,7 @@ const TABS = [
 // ─── Main dashboard ────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const navigate  = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, profileName, signOut } = useAuth();
 
   const [tab, setTab]             = useState('review');
   const [orders, setOrders]       = useState([]);
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-gray-400">{user?.email}</span>
+            <span className="text-xs text-gray-400">{profileName || user?.user_metadata?.full_name || 'Account'}</span>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-white transition-colors"

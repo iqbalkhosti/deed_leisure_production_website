@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, ShoppingBag, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, ShoppingBag, User, KeyRound } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import supabase from '../lib/supabase.js';
 
-const TABS = { SIGN_IN: 'signin', SIGN_UP: 'signup' };
+const TABS = { SIGN_IN: 'signin', SIGN_UP: 'signup', VERIFY: 'verify' };
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp, user, userRole, loading } = useAuth();
+  const { signIn, signUp, verifySignUpCode, resendSignUpCode, user, userRole, loading } = useAuth();
 
   const [tab, setTab] = useState(TABS.SIGN_IN);
   const [showPass, setShowPass] = useState(false);
@@ -22,12 +22,15 @@ export default function Login() {
   const [siPass, setSiPass] = useState('');
 
   // Sign-up form
+  const [suName, setSuName] = useState('');
   const [suEmail, setSuEmail] = useState('');
   const [suPass, setSuPass] = useState('');
   const [suConfirm, setSuConfirm] = useState('');
   const [suRole, setSuRole] = useState('student');
   const [suClubId, setSuClubId] = useState('');
   const [clubs, setClubs] = useState([]);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verifyEmail, setVerifyEmail] = useState('');
 
   const from = location.state?.from?.pathname || null;
 
@@ -65,19 +68,52 @@ export default function Login() {
   const handleSignUp = async (e) => {
     e.preventDefault();
     setError('');
+    if (suName.trim().length < 2) return setError('Please enter your name.');
     if (suPass !== suConfirm) return setError('Passwords do not match.');
     if (suPass.length < 6) return setError('Password must be at least 6 characters.');
     if (suRole === 'club_exec' && !suClubId) return setError('Please select your club.');
     setSubmitting(true);
     try {
-      await signUp(suEmail, suPass, suRole, suClubId || null);
+      await signUp(suEmail, suPass, suName, suRole, suClubId || null);
+      setVerifyEmail(suEmail);
+      setVerificationCode('');
+      setTab(TABS.VERIFY);
       setSuccess(
         suRole === 'club_exec'
-          ? 'Account created! An admin will review and approve your exec access. Check your email to confirm your account.'
-          : 'Account created! Check your email to confirm your account, then sign in.'
+          ? 'We sent a verification code to your email. An admin will also review your vendor access.'
+          : 'We sent a verification code to your email.'
       );
     } catch (err) {
       setError(err.message ?? 'Could not create account. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!verifyEmail) return setError('Please return to create your account first.');
+    if (verificationCode.trim().length < 6) return setError('Enter the 6-digit verification code from your email.');
+    setSubmitting(true);
+    try {
+      await verifySignUpCode(verifyEmail, verificationCode.trim());
+      setSuccess('Email verified. Signing you in…');
+    } catch (err) {
+      setError(err.message ?? 'That verification code could not be confirmed.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError('');
+    setSubmitting(true);
+    try {
+      await resendSignUpCode(verifyEmail);
+      setSuccess(`A new verification code was sent to ${verifyEmail}.`);
+    } catch (err) {
+      setError(err.message ?? 'Could not resend the verification code.');
     } finally {
       setSubmitting(false);
     }
@@ -206,7 +242,7 @@ export default function Login() {
             )}
 
             {/* ── SIGN UP ── */}
-            {tab === TABS.SIGN_UP && !success && (
+            {tab === TABS.SIGN_UP && (
               <form onSubmit={handleSignUp} className="space-y-5">
                 {/* Role selector */}
                 <div>
@@ -230,6 +266,22 @@ export default function Login() {
                         <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Your name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={suName}
+                      onChange={e => setSuName(e.target.value)}
+                      required
+                      autoComplete="name"
+                      placeholder="Jane Smith"
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition"
+                    />
                   </div>
                 </div>
 
@@ -334,21 +386,37 @@ export default function Login() {
               </form>
             )}
 
-            {/* Success state after signup */}
-            {tab === TABS.SIGN_UP && success && (
-              <div className="text-center py-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="w-8 h-8 text-green-600" />
+            {tab === TABS.VERIFY && (
+              <form onSubmit={handleVerify} className="space-y-5">
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <KeyRound className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900">Verify your email</h3>
+                  <p className="text-sm text-gray-500 mt-2">Enter the 6-digit code sent to <span className="font-medium text-gray-700">{verifyEmail}</span>.</p>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">You're almost in!</h3>
-                <p className="text-sm text-gray-500 mb-6">{success}</p>
-                <button
-                  onClick={() => { setTab(TABS.SIGN_IN); setSuccess(''); setError(''); }}
-                  className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium text-sm hover:bg-gray-800 transition-colors"
-                >
-                  Go to Sign In
-                </button>
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="verification-code">Verification code</label>
+                  <input
+                    id="verification-code"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    maxLength="6"
+                    value={verificationCode}
+                    onChange={e => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                    required
+                    placeholder="123456"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-center text-lg tracking-[0.35em] font-semibold focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition"
+                  />
+                </div>
+                <button type="submit" disabled={submitting} className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium text-sm hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors">{submitting ? 'Verifying…' : 'Verify email'}</button>
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <button type="button" onClick={handleResendCode} disabled={submitting} className="text-primary font-medium hover:underline disabled:opacity-50">Send another code</button>
+                  <button type="button" onClick={() => { setTab(TABS.SIGN_UP); setSuccess(''); setError(''); }} className="text-gray-500 hover:text-gray-700">Back to sign up</button>
+                </div>
+              </form>
             )}
           </div>
         </div>

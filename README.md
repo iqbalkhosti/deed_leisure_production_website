@@ -301,9 +301,12 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 CLIENT_URL=https://your-frontend.vercel.app
 PORT=4242
 
-# Optional — required for Email Buyers feature
+# Required for Email Buyers and Design Studio mockup requests
 SENDGRID_API_KEY=SG.xxx
-SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+# Must be a verified SendGrid sender
+SENDGRID_FROM_EMAIL=verified-sender@yourdomain.com
+# Optional — defaults to info@deedleisure.ca
+DESIGN_REQUEST_RECIPIENT=info@deedleisure.ca
 ```
 
 > `.env` files are gitignored. Never commit secrets.
@@ -455,7 +458,7 @@ Photo uploads require a public storage bucket:
 
 ## SendGrid Email Setup
 
-The "Email Buyers" feature in the Vendor Dashboard uses SendGrid:
+The "Email Buyers" feature and Design Studio mockup requests use SendGrid:
 
 1. Create a [SendGrid](https://sendgrid.com) account
 2. Create an API key with **Mail Send** permissions
@@ -463,11 +466,17 @@ The "Email Buyers" feature in the Vendor Dashboard uses SendGrid:
 4. Add to `server/.env` (and Render environment variables):
    ```env
    SENDGRID_API_KEY=SG.xxx
-   SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+   SENDGRID_FROM_EMAIL=verified-sender@yourdomain.com
+   DESIGN_REQUEST_RECIPIENT=info@deedleisure.ca
    ```
-5. Install the package on the server: `npm install @sendgrid/mail`
+5. Add the same variables in Render's Environment tab and redeploy the server.
+6. Install the package on the server: `npm install @sendgrid/mail`
 
 Without these variables, the endpoint returns a `503` with a clear error message — the rest of the app continues to work normally.
+
+## Supabase Email Verification Setup
+
+The account screen uses a six-digit email code after sign-up. In Supabase Dashboard, enable **Confirm email** under Authentication settings. Then edit **Auth → Email Templates → Confirm signup** to include `{{ .Token }}` in the email body, for example: `Your Deed Leisure verification code is {{ .Token }}`. The client verifies that code with Supabase Auth; no mail secret belongs in `client/.env`.
 
 ---
 

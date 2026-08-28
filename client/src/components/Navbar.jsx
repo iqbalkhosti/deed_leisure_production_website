@@ -14,7 +14,7 @@ const mobileNavLinkClass = ({ isActive }) =>
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user, userRole, isAdmin, isExec, signOut } = useAuth();
+  const { user, userRole, isAdmin, isExec, profileName, signOut } = useAuth();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
 
@@ -44,6 +44,7 @@ export default function Navbar() {
     userRole === 'admin' ? 'Admin'
     : userRole === 'club_exec' ? 'Vendor'
     : 'User';
+  const displayName = profileName || user?.user_metadata?.full_name || 'Account';
 
   return (
     <nav className="sticky top-0 bg-white shadow-sm z-50">
@@ -102,7 +103,7 @@ export default function Navbar() {
                       <User className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <span className="font-medium text-gray-700 max-w-[100px] truncate">
-                      {user.email?.split('@')[0]}
+                      {displayName}
                     </span>
                     <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -111,7 +112,7 @@ export default function Navbar() {
                     <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
                       <div className="px-4 py-2 border-b border-gray-100">
                         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{roleLabel}</p>
-                        <p className="text-sm text-gray-800 truncate mt-0.5">{user.email}</p>
+                        <p className="text-sm text-gray-800 truncate mt-0.5">{displayName}</p>
                       </div>
                       <Link
                         to={dashboardPath}
@@ -181,7 +182,7 @@ export default function Navbar() {
 
               {user ? (
                 <div className="bg-gray-50 rounded-xl p-3 mt-1">
-                  <p className="text-xs text-gray-400 mb-2">{roleLabel} · {user.email}</p>
+                  <p className="text-xs text-gray-400 mb-2">{roleLabel} · {displayName}</p>
                   <Link
                     to={dashboardPath}
                     onClick={closeMenu}

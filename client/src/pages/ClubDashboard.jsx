@@ -49,7 +49,7 @@ const emptyForm = {
 };
 
 export default function ClubDashboard() {
-  const { user, userClubId, signOut } = useAuth();
+  const { user, userClubId, profileName, signOut } = useAuth();
 
   const [tab, setTab]           = useState('listings');
   const [club, setClub]         = useState(null);
@@ -236,7 +236,7 @@ export default function ClubDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-gray-400">{user?.email}</span>
+            <span className="text-xs text-gray-400">{profileName || user?.user_metadata?.full_name || 'Account'}</span>
             <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-white">
               <LogOut className="w-4 h-4" /> Sign out
             </button>

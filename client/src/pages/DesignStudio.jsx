@@ -28,35 +28,44 @@ const COLORS = [
 
 const FONTS = [
   { name: 'Classic Sans', value: 'Arial, sans-serif' },
+  { name: 'Clean Sans', value: 'Helvetica Neue, Helvetica, Arial, sans-serif' },
+  { name: 'Humanist Sans', value: 'Verdana, Geneva, sans-serif' },
+  { name: 'Geometric Sans', value: 'Century Gothic, Futura, sans-serif' },
   { name: 'Modern Rounded', value: 'Trebuchet MS, sans-serif' },
+  { name: 'Friendly Rounded', value: 'Arial Rounded MT Bold, Arial, sans-serif' },
   { name: 'Editorial Serif', value: 'Georgia, serif' },
+  { name: 'Classic Serif', value: 'Times New Roman, Times, serif' },
+  { name: 'Book Serif', value: 'Palatino Linotype, Book Antiqua, Palatino, serif' },
   { name: 'Bold Display', value: 'Impact, sans-serif' },
+  { name: 'Condensed Display', value: 'Arial Narrow, Arial, sans-serif' },
+  { name: 'Western Display', value: 'Copperplate, Papyrus, fantasy' },
   { name: 'Monospace', value: 'Courier New, monospace' },
   { name: 'Script', value: 'Brush Script MT, cursive' },
+  { name: 'Other — request a font', value: 'other' },
 ];
 
 const APPAREL_PLACEMENTS = {
   front: [
-    { id: 'full-front', name: 'Full front', size: '12 × 16 in', x: 50, y: 55, width: 38, height: 45 },
-    { id: 'center-chest', name: 'Center chest', size: '10 × 12 in', x: 50, y: 42, width: 32, height: 30 },
-    { id: 'left-chest', name: 'Left chest', size: '4 × 4 in', x: 61, y: 36, width: 14, height: 14 },
-    { id: 'right-chest', name: 'Right chest', size: '4 × 4 in', x: 39, y: 36, width: 14, height: 14 },
-    { id: 'left-sleeve', name: 'Left sleeve', size: '4 × 4 in', x: 82, y: 37, width: 12, height: 16 },
+    { id: 'full-front', name: 'Full front', inchesWidth: 12, inchesHeight: 16, x: 50, y: 55, width: 38, height: 45 },
+    { id: 'center-chest', name: 'Center chest', inchesWidth: 10, inchesHeight: 12, x: 50, y: 42, width: 32, height: 30 },
+    { id: 'left-chest', name: 'Left chest', inchesWidth: 4, inchesHeight: 4, x: 61, y: 36, width: 14, height: 14 },
+    { id: 'right-chest', name: 'Right chest', inchesWidth: 4, inchesHeight: 4, x: 39, y: 36, width: 14, height: 14 },
+    { id: 'left-sleeve', name: 'Left sleeve', inchesWidth: 4, inchesHeight: 4, x: 82, y: 37, width: 12, height: 16 },
   ],
   back: [
-    { id: 'full-back', name: 'Full back', size: '12 × 16 in', x: 50, y: 55, width: 38, height: 45 },
-    { id: 'upper-back', name: 'Upper back', size: '12 × 4 in', x: 50, y: 31, width: 38, height: 12 },
-    { id: 'back-neck', name: 'Back neck', size: '4 × 2 in', x: 50, y: 22, width: 14, height: 7 },
+    { id: 'full-back', name: 'Full back', inchesWidth: 12, inchesHeight: 16, x: 50, y: 55, width: 38, height: 45 },
+    { id: 'upper-back', name: 'Upper back', inchesWidth: 12, inchesHeight: 4, x: 50, y: 31, width: 38, height: 12 },
+    { id: 'back-neck', name: 'Back neck', inchesWidth: 4, inchesHeight: 2, x: 50, y: 22, width: 14, height: 7 },
   ],
 };
 
 const TOTE_PLACEMENTS = {
   front: [
-    { id: 'tote-front', name: 'Front centre', size: '10 × 12 in', x: 50, y: 59, width: 44, height: 45 },
-    { id: 'tote-pocket', name: 'Upper front', size: '6 × 6 in', x: 50, y: 43, width: 26, height: 22 },
+    { id: 'tote-front', name: 'Front centre', inchesWidth: 10, inchesHeight: 12, x: 50, y: 59, width: 44, height: 45 },
+    { id: 'tote-pocket', name: 'Upper front', inchesWidth: 6, inchesHeight: 6, x: 50, y: 43, width: 26, height: 22 },
   ],
   back: [
-    { id: 'tote-back', name: 'Back centre', size: '10 × 12 in', x: 50, y: 59, width: 44, height: 45 },
+    { id: 'tote-back', name: 'Back centre', inchesWidth: 10, inchesHeight: 12, x: 50, y: 59, width: 44, height: 45 },
   ],
 };
 
@@ -70,6 +79,26 @@ function placementFor(product, side, id) {
 
 function titleCase(value) {
   return value.replaceAll('-', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatNumber(value) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function formatDimensions(width, height) {
+  return `${formatNumber(width)} × ${formatNumber(height)} in (${formatNumber(width * 2.54)} × ${formatNumber(height * 2.54)} cm)`;
+}
+
+function toInches(value, unit) {
+  return unit === 'cm' ? value / 2.54 : value;
+}
+
+function fromInches(value, unit) {
+  return unit === 'cm' ? value * 2.54 : value;
+}
+
+function isValidDimension(value) {
+  return Number.isFinite(value) && value >= 0.5 && value <= 24;
 }
 
 export default function DesignStudio() {
@@ -86,10 +115,14 @@ export default function DesignStudio() {
   const [rotation, setRotation] = useState(0);
   const [textValue, setTextValue] = useState('');
   const [textFont, setTextFont] = useState(FONTS[0].value);
+  const [fontRequest, setFontRequest] = useState('');
   const [textColor, setTextColor] = useState('#111827');
   const [textSize, setTextSize] = useState(42);
   const [textPosition, setTextPosition] = useState({ x: 50, y: 55 });
   const [activeLayer, setActiveLayer] = useState('art');
+  const [sizeMode, setSizeMode] = useState('standard');
+  const [sizeUnit, setSizeUnit] = useState('in');
+  const [customSize, setCustomSize] = useState({ width: '', height: '' });
   const [showHatDialog, setShowHatDialog] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [requestState, setRequestState] = useState({ status: 'idle', error: '', reference: '' });
@@ -97,7 +130,39 @@ export default function DesignStudio() {
 
   const placement = placementFor(product, side, placementId);
   const selectedColor = COLORS.find((color) => color.value === garmentColor);
+  const customWidth = toInches(Number(customSize.width), sizeUnit);
+  const customHeight = toInches(Number(customSize.height), sizeUnit);
+  const useCustomSize = sizeMode === 'custom' && isValidDimension(customWidth) && isValidDimension(customHeight);
+  const activeDimensions = useCustomSize
+    ? { width: customWidth, height: customHeight }
+    : { width: placement.inchesWidth, height: placement.inchesHeight };
+  const designArea = {
+    ...placement,
+    size: formatDimensions(activeDimensions.width, activeDimensions.height),
+    width: useCustomSize ? Math.min(72, Math.max(8, placement.width * (activeDimensions.width / placement.inchesWidth))) : placement.width,
+    height: useCustomSize ? Math.min(72, Math.max(7, placement.height * (activeDimensions.height / placement.inchesHeight))) : placement.height,
+  };
   const hasDesign = Boolean(designImage || textValue.trim());
+
+  const selectSizeMode = (nextMode) => {
+    setSizeMode(nextMode);
+    if (nextMode === 'custom' && (!customSize.width || !customSize.height)) {
+      setCustomSize({
+        width: String(formatNumber(fromInches(placement.inchesWidth, sizeUnit))),
+        height: String(formatNumber(fromInches(placement.inchesHeight, sizeUnit))),
+      });
+    }
+  };
+
+  const changeSizeUnit = (nextUnit) => {
+    if (nextUnit === sizeUnit) return;
+    const factor = nextUnit === 'cm' ? 2.54 : 1 / 2.54;
+    setCustomSize((current) => ({
+      width: current.width ? String(formatNumber(Number(current.width) * factor)) : '',
+      height: current.height ? String(formatNumber(Number(current.height) * factor)) : '',
+    }));
+    setSizeUnit(nextUnit);
+  };
 
   const chooseProduct = (nextProduct) => {
     setProduct(nextProduct);
@@ -177,9 +242,11 @@ export default function DesignStudio() {
           product: PRODUCTS.find((item) => item.id === product)?.name ?? product,
           color: selectedColor?.name ?? garmentColor,
           side: titleCase(side),
-          placement: `${placement.name} (up to ${placement.size})`,
+          placement: `${placement.name} (${useCustomSize ? 'custom: ' : 'up to '}${designArea.size})`,
           text: textValue.trim(),
-          font: FONTS.find((font) => font.value === textFont)?.name ?? textFont,
+          font: textFont === 'other'
+            ? `Requested font: ${fontRequest.trim() || 'Not specified'}`
+            : FONTS.find((font) => font.value === textFont)?.name ?? textFont,
           mockupDataUrl,
           artworkDataUrl: designImage,
         },
@@ -242,6 +309,7 @@ export default function DesignStudio() {
                 <label className="min-w-0 text-sm font-medium text-slate-700" htmlFor="text-font">Font<select id="text-font" value={textFont} onChange={(event) => { setTextFont(event.target.value); setActiveLayer('text'); }} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{FONTS.map((font) => <option key={font.value} value={font.value}>{font.name}</option>)}</select></label>
                 <label className="text-sm font-medium text-slate-700" htmlFor="text-color">Colour<input id="text-color" type="color" value={textColor} onChange={(event) => { setTextColor(event.target.value); setActiveLayer('text'); }} className="mt-2 h-[42px] w-full cursor-pointer rounded-lg border border-slate-300 bg-white p-1" /></label>
               </div>
+              {textFont === 'other' ? <div className="mt-3"><label className="block text-sm font-medium text-slate-700" htmlFor="font-request">Requested font<input id="font-request" value={fontRequest} onChange={(event) => setFontRequest(event.target.value)} placeholder="e.g. Montserrat Alternates" className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" /></label><p className="mt-1.5 text-xs text-slate-500">This preview uses a fallback font. We’ll source the requested font for production, subject to availability and licensing.</p></div> : null}
               {textValue ? <button type="button" onClick={() => { setTextValue(''); setTextPosition({ x: placement.x, y: placement.y }); }} className="mt-3 text-xs font-medium text-red-600 hover:text-red-700">Remove text</button> : null}
             </section>
 
@@ -282,8 +350,14 @@ export default function DesignStudio() {
               </div>
               <label className="mt-4 block text-sm font-medium text-slate-700" htmlFor="placement">Standard placement</label>
               <select id="placement" value={placementId} onChange={(event) => choosePlacement(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
-                {placementsFor(product, side).map((option) => <option key={option.id} value={option.id}>{option.name} — up to {option.size}</option>)}
+                {placementsFor(product, side).map((option) => <option key={option.id} value={option.id}>{option.name} — up to {formatDimensions(option.inchesWidth, option.inchesHeight)}</option>)}
               </select>
+              <p className="mt-2 text-xs text-slate-500">Standard maximum: {formatDimensions(placement.inchesWidth, placement.inchesHeight)}</p>
+              <div className="mt-4 flex rounded-lg bg-slate-100 p-1" aria-label="Artwork size mode">
+                <button type="button" onClick={() => selectSizeMode('standard')} className={`flex-1 rounded-md px-2 py-2 text-xs font-semibold transition ${sizeMode === 'standard' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}>Standard size</button>
+                <button type="button" onClick={() => selectSizeMode('custom')} className={`flex-1 rounded-md px-2 py-2 text-xs font-semibold transition ${sizeMode === 'custom' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}>Custom size</button>
+              </div>
+              {sizeMode === 'custom' ? <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-slate-700">Finished artwork size</p><div className="flex rounded-md bg-white p-0.5 ring-1 ring-slate-200"><button type="button" onClick={() => changeSizeUnit('in')} className={`rounded px-2 py-1 text-xs font-medium ${sizeUnit === 'in' ? 'bg-slate-900 text-white' : 'text-slate-600'}`}>in</button><button type="button" onClick={() => changeSizeUnit('cm')} className={`rounded px-2 py-1 text-xs font-medium ${sizeUnit === 'cm' ? 'bg-slate-900 text-white' : 'text-slate-600'}`}>cm</button></div></div><div className="mt-3 grid grid-cols-2 gap-2"><label className="text-xs font-medium text-slate-600" htmlFor="custom-width">Width<input id="custom-width" type="number" min="0.5" max={sizeUnit === 'cm' ? 61 : 24} step="0.1" inputMode="decimal" value={customSize.width} onChange={(event) => setCustomSize({ ...customSize, width: event.target.value })} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" /></label><label className="text-xs font-medium text-slate-600" htmlFor="custom-height">Height<input id="custom-height" type="number" min="0.5" max={sizeUnit === 'cm' ? 61 : 24} step="0.1" inputMode="decimal" value={customSize.height} onChange={(event) => setCustomSize({ ...customSize, height: event.target.value })} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" /></label></div><p className="mt-2 text-xs text-slate-500">{useCustomSize ? `Selected: ${designArea.size}` : 'Enter a size from 0.5 to 24 in (1.3 to 61 cm). Custom sizing requires production approval.'}</p></div> : null}
               {hasDesign ? <>
                 {designImage && textValue ? <div className="mt-4 flex rounded-lg bg-slate-100 p-1"><button type="button" onClick={() => setActiveLayer('art')} className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold ${activeLayer === 'art' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}>Artwork</button><button type="button" onClick={() => setActiveLayer('text')} className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold ${activeLayer === 'text' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}>Text</button></div> : null}
                 {activeLayer === 'art' && designImage ? <>
@@ -300,10 +374,10 @@ export default function DesignStudio() {
           <section className="min-w-0">
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                <div><h3 className="text-lg font-semibold">Photorealistic 2D preview</h3><p className="text-sm text-slate-500">{PRODUCTS.find((item) => item.id === product)?.name} · {titleCase(side)} · {placement.name}</p></div>
+                <div><h3 className="text-lg font-semibold">Photorealistic 2D preview</h3><p className="text-sm text-slate-500">{PRODUCTS.find((item) => item.id === product)?.name} · {titleCase(side)} · {placement.name} · {designArea.size}</p></div>
                 <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">Print & embroidery area</span>
               </div>
-              <MockupCanvas ref={mockupRef} product={product} side={side} garmentColor={garmentColor} colorSlug={selectedColor?.slug ?? 'white'} designImage={designImage} placement={placement} position={position} designScale={designScale} rotation={rotation} textValue={textValue} textFont={textFont} textColor={textColor} textSize={textSize} textPosition={textPosition} activeLayer={activeLayer} onPositionChange={setPosition} onTextPositionChange={setTextPosition} onActiveLayerChange={setActiveLayer} />
+              <MockupCanvas ref={mockupRef} product={product} side={side} garmentColor={garmentColor} colorSlug={selectedColor?.slug ?? 'white'} designImage={designImage} placement={designArea} position={position} designScale={designScale} rotation={rotation} textValue={textValue} textFont={textFont === 'other' ? FONTS[0].value : textFont} textColor={textColor} textSize={textSize} textPosition={textPosition} activeLayer={activeLayer} onPositionChange={setPosition} onTextPositionChange={setTextPosition} onActiveLayerChange={setActiveLayer} />
               <div className="mt-6 flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-slate-600">{hasDesign ? 'Your mockup is ready to send for approval.' : 'Upload artwork or add text to see it on the garment.'}</p>
                 <button onClick={openRequest} disabled={!hasDesign} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"><Mail className="h-4 w-4" /> Submit mockup request</button>
