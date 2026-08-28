@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft, Download, Mail, Move, Palette, Shirt, Upload, X,
-  RotateCcw, Maximize2, CheckCircle2, Info,
+  RotateCcw, Maximize2, CheckCircle2, Info, Type,
 } from 'lucide-react';
 import MockupCanvas from '../components/MockupCanvas';
 import ChatBot from '../components/ChatBot';
@@ -10,8 +10,8 @@ import { submitDesignRequest } from '../lib/api';
 
 const PRODUCTS = [
   { id: 'tshirt', name: 'T-Shirt', detail: 'Gildan Softstyle 64000', icon: '👕' },
-  { id: 'hoodie', name: 'Hoodie', detail: 'Add your photo assets', icon: '🧥' },
-  { id: 'polo', name: 'Polo', detail: 'Add your photo assets', icon: '👔' },
+  { id: 'hoodie', name: 'Hoodie', detail: 'Gildan Heavy Blend 18500', icon: '🧥' },
+  { id: 'polo', name: 'Polo', detail: 'M&O Ring-Spun Piqué 7002', icon: '👔' },
   { id: 'tote', name: 'Tote Bag', detail: 'Add your photo assets', icon: '👜' },
 ];
 
@@ -24,6 +24,15 @@ const COLORS = [
   { name: 'Royal', slug: 'royal', value: '#1d4ed8', dark: true },
   { name: 'Forest', slug: 'forest', value: '#166534', dark: true },
   { name: 'Maroon', slug: 'maroon', value: '#7f1d1d', dark: true },
+];
+
+const FONTS = [
+  { name: 'Classic Sans', value: 'Arial, sans-serif' },
+  { name: 'Modern Rounded', value: 'Trebuchet MS, sans-serif' },
+  { name: 'Editorial Serif', value: 'Georgia, serif' },
+  { name: 'Bold Display', value: 'Impact, sans-serif' },
+  { name: 'Monospace', value: 'Courier New, monospace' },
+  { name: 'Script', value: 'Brush Script MT, cursive' },
 ];
 
 const APPAREL_PLACEMENTS = {
@@ -75,6 +84,12 @@ export default function DesignStudio() {
   const [position, setPosition] = useState({ x: 50, y: 55 });
   const [designScale, setDesignScale] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [textValue, setTextValue] = useState('');
+  const [textFont, setTextFont] = useState(FONTS[0].value);
+  const [textColor, setTextColor] = useState('#111827');
+  const [textSize, setTextSize] = useState(42);
+  const [textPosition, setTextPosition] = useState({ x: 50, y: 55 });
+  const [activeLayer, setActiveLayer] = useState('art');
   const [showHatDialog, setShowHatDialog] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [requestState, setRequestState] = useState({ status: 'idle', error: '', reference: '' });
@@ -82,6 +97,7 @@ export default function DesignStudio() {
 
   const placement = placementFor(product, side, placementId);
   const selectedColor = COLORS.find((color) => color.value === garmentColor);
+  const hasDesign = Boolean(designImage || textValue.trim());
 
   const chooseProduct = (nextProduct) => {
     setProduct(nextProduct);
@@ -89,6 +105,7 @@ export default function DesignStudio() {
     const nextPlacement = placementsFor(nextProduct, 'front')[0];
     setPlacementId(nextPlacement.id);
     setPosition({ x: nextPlacement.x, y: nextPlacement.y });
+    setTextPosition({ x: nextPlacement.x, y: nextPlacement.y });
   };
 
   const chooseSide = (nextSide) => {
@@ -96,12 +113,15 @@ export default function DesignStudio() {
     const nextPlacement = placementsFor(product, nextSide)[0];
     setPlacementId(nextPlacement.id);
     setPosition({ x: nextPlacement.x, y: nextPlacement.y });
+    setTextPosition({ x: nextPlacement.x, y: nextPlacement.y });
   };
 
   const choosePlacement = (nextPlacementId) => {
     const nextPlacement = placementFor(product, side, nextPlacementId);
     setPlacementId(nextPlacement.id);
-    setPosition({ x: nextPlacement.x, y: nextPlacement.y });
+    const nextPosition = { x: nextPlacement.x, y: nextPlacement.y };
+    if (activeLayer === 'text') setTextPosition(nextPosition);
+    else setPosition(nextPosition);
   };
 
   const uploadArtwork = (event) => {
@@ -115,6 +135,7 @@ export default function DesignStudio() {
     reader.onload = () => {
       setDesignImage(reader.result);
       setDesignFileName(file.name);
+      setActiveLayer('art');
       setRequestState({ status: 'idle', error: '', reference: '' });
     };
     reader.readAsDataURL(file);
@@ -126,11 +147,12 @@ export default function DesignStudio() {
     setDesignScale(1);
     setRotation(0);
     setPosition({ x: placement.x, y: placement.y });
+    if (textValue.trim()) setActiveLayer('text');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const exportDesign = async () => {
-    if (!designImage || !mockupRef.current) return;
+    if (!hasDesign || !mockupRef.current) return;
     const imageUrl = await mockupRef.current.toDataUrl();
     const link = document.createElement('a');
     link.href = imageUrl;
@@ -145,7 +167,7 @@ export default function DesignStudio() {
 
   const submitRequest = async (event) => {
     event.preventDefault();
-    if (!mockupRef.current || !designImage) return;
+    if (!mockupRef.current || !hasDesign) return;
     setRequestState({ status: 'sending', error: '', reference: '' });
     try {
       const mockupDataUrl = await mockupRef.current.toDataUrl();
@@ -156,6 +178,8 @@ export default function DesignStudio() {
           color: selectedColor?.name ?? garmentColor,
           side: titleCase(side),
           placement: `${placement.name} (up to ${placement.size})`,
+          text: textValue.trim(),
+          font: FONTS.find((font) => font.value === textFont)?.name ?? textFont,
           mockupDataUrl,
           artworkDataUrl: designImage,
         },
@@ -177,7 +201,7 @@ export default function DesignStudio() {
               <p className="hidden text-xs text-slate-500 sm:block">2D placement preview for custom apparel</p>
             </div>
           </div>
-          <button onClick={exportDesign} disabled={!designImage} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4">
+          <button onClick={exportDesign} disabled={!hasDesign} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4">
             <Download className="h-4 w-4" /> <span className="hidden sm:inline">Export mockup</span><span className="sm:hidden">Export</span>
           </button>
         </div>
@@ -211,6 +235,17 @@ export default function DesignStudio() {
             </section>
 
             <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <h3 className="flex items-center gap-2 font-semibold"><Type className="h-5 w-5 text-primary" /> Add text</h3>
+              <label className="mt-4 block text-sm font-medium text-slate-700" htmlFor="design-text">Your text</label>
+              <textarea id="design-text" value={textValue} maxLength="120" rows="2" onChange={(event) => { setTextValue(event.target.value); setActiveLayer('text'); }} placeholder="Add a name, slogan, team, or date" className="mt-2 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
+              <div className="mt-4 grid grid-cols-[minmax(0,1fr)_54px] gap-3">
+                <label className="min-w-0 text-sm font-medium text-slate-700" htmlFor="text-font">Font<select id="text-font" value={textFont} onChange={(event) => { setTextFont(event.target.value); setActiveLayer('text'); }} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{FONTS.map((font) => <option key={font.value} value={font.value}>{font.name}</option>)}</select></label>
+                <label className="text-sm font-medium text-slate-700" htmlFor="text-color">Colour<input id="text-color" type="color" value={textColor} onChange={(event) => { setTextColor(event.target.value); setActiveLayer('text'); }} className="mt-2 h-[42px] w-full cursor-pointer rounded-lg border border-slate-300 bg-white p-1" /></label>
+              </div>
+              {textValue ? <button type="button" onClick={() => { setTextValue(''); setTextPosition({ x: placement.x, y: placement.y }); }} className="mt-3 text-xs font-medium text-red-600 hover:text-red-700">Remove text</button> : null}
+            </section>
+
+            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
               <h3 className="flex items-center gap-2 font-semibold"><Shirt className="h-5 w-5 text-primary" /> Choose a product</h3>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {PRODUCTS.map((item) => (
@@ -237,7 +272,7 @@ export default function DesignStudio() {
                   </button>
                 ))}
               </div>
-              <p className="mt-3 text-xs text-slate-500">{selectedColor?.name}. Add product photos for each colour when available; the tee uses a colour-tinted photo preview in the meantime.</p>
+              <p className="mt-3 text-xs text-slate-500">{selectedColor?.name}. Every product now has its own photo mockup; colour-specific product images take priority when you add them.</p>
             </section>
 
             <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -249,11 +284,15 @@ export default function DesignStudio() {
               <select id="placement" value={placementId} onChange={(event) => choosePlacement(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                 {placementsFor(product, side).map((option) => <option key={option.id} value={option.id}>{option.name} — up to {option.size}</option>)}
               </select>
-              {designImage ? <>
+              {hasDesign ? <>
+                {designImage && textValue ? <div className="mt-4 flex rounded-lg bg-slate-100 p-1"><button type="button" onClick={() => setActiveLayer('art')} className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold ${activeLayer === 'art' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}>Artwork</button><button type="button" onClick={() => setActiveLayer('text')} className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold ${activeLayer === 'text' ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}>Text</button></div> : null}
+                {activeLayer === 'art' && designImage ? <>
                 <label className="mt-4 flex items-center justify-between text-sm text-slate-700" htmlFor="scale"><span className="flex items-center gap-2"><Maximize2 className="h-4 w-4" /> Artwork size</span><span>{Math.round(designScale * 100)}%</span></label>
                 <input id="scale" className="mt-2 w-full accent-primary" type="range" min="60" max="120" value={designScale * 100} onChange={(event) => setDesignScale(Number(event.target.value) / 100)} />
                 <label className="mt-4 flex items-center justify-between text-sm text-slate-700" htmlFor="rotation"><span>Rotation</span><span>{rotation}°</span></label>
                 <div className="mt-2 flex gap-2"><input id="rotation" className="w-full accent-primary" type="range" min="-30" max="30" value={rotation} onChange={(event) => setRotation(Number(event.target.value))} /><button onClick={() => setRotation(0)} className="rounded-md border border-slate-200 px-2 text-xs font-medium hover:bg-slate-50" aria-label="Reset rotation"><RotateCcw className="h-4 w-4" /></button></div>
+                </> : null}
+                {activeLayer === 'text' && textValue ? <><label className="mt-4 flex items-center justify-between text-sm text-slate-700" htmlFor="text-size"><span className="flex items-center gap-2"><Maximize2 className="h-4 w-4" /> Text size</span><span>{textSize}px</span></label><input id="text-size" className="mt-2 w-full accent-primary" type="range" min="18" max="88" value={textSize} onChange={(event) => setTextSize(Number(event.target.value))} /></> : null}
               </> : null}
             </section>
           </aside>
@@ -264,10 +303,10 @@ export default function DesignStudio() {
                 <div><h3 className="text-lg font-semibold">Photorealistic 2D preview</h3><p className="text-sm text-slate-500">{PRODUCTS.find((item) => item.id === product)?.name} · {titleCase(side)} · {placement.name}</p></div>
                 <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">Print & embroidery area</span>
               </div>
-              <MockupCanvas ref={mockupRef} product={product} side={side} garmentColor={garmentColor} colorSlug={selectedColor?.slug ?? 'white'} designImage={designImage} placement={placement} position={position} designScale={designScale} rotation={rotation} onPositionChange={setPosition} />
+              <MockupCanvas ref={mockupRef} product={product} side={side} garmentColor={garmentColor} colorSlug={selectedColor?.slug ?? 'white'} designImage={designImage} placement={placement} position={position} designScale={designScale} rotation={rotation} textValue={textValue} textFont={textFont} textColor={textColor} textSize={textSize} textPosition={textPosition} activeLayer={activeLayer} onPositionChange={setPosition} onTextPositionChange={setTextPosition} onActiveLayerChange={setActiveLayer} />
               <div className="mt-6 flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-slate-600">{designImage ? 'Your mockup is ready to send for approval.' : 'Upload artwork to see it on the garment.'}</p>
-                <button onClick={openRequest} disabled={!designImage} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"><Mail className="h-4 w-4" /> Submit mockup request</button>
+                <p className="text-sm text-slate-600">{hasDesign ? 'Your mockup is ready to send for approval.' : 'Upload artwork or add text to see it on the garment.'}</p>
+                <button onClick={openRequest} disabled={!hasDesign} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"><Mail className="h-4 w-4" /> Submit mockup request</button>
               </div>
             </div>
             <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 p-5 text-sm text-slate-700">

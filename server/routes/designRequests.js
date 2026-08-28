@@ -46,6 +46,8 @@ router.post('/', async (req, res) => {
   const color = cleanText(design.color, 60);
   const side = cleanText(design.side, 20);
   const placement = cleanText(design.placement, 80);
+  const text = cleanText(design.text, 120);
+  const font = cleanText(design.font, 80);
   const mockup = dataUrlAttachment(design.mockupDataUrl, 'design-studio-mockup');
   const artwork = dataUrlAttachment(design.artworkDataUrl, 'submitted-artwork');
 
@@ -71,9 +73,11 @@ router.post('/', async (req, res) => {
     ['Colour', color || 'Not specified'],
     ['View', side || 'Not specified'],
     ['Placement', placement],
+    ['Text', text || 'None'],
+    ['Text font', font || 'Not applicable'],
     ['Notes', notes || 'None'],
   ];
-  const text = rows.map(([label, value]) => `${label}: ${value}`).join('\n');
+  const textContent = rows.map(([label, value]) => `${label}: ${value}`).join('\n');
   const html = rows.map(([label, value]) => `<tr><td style="padding:6px 12px 6px 0;font-weight:600">${escapeHtml(label)}</td><td style="padding:6px 0">${escapeHtml(value)}</td></tr>`).join('');
 
   try {
@@ -82,7 +86,7 @@ router.post('/', async (req, res) => {
       from: process.env.SENDGRID_FROM_EMAIL,
       replyTo: { email, name },
       subject: `Mockup request ${reference} — ${product}`,
-      text: `${text}\n\nThe final mockup and submitted artwork are attached.`,
+      text: `${textContent}\n\nThe final mockup and submitted artwork are attached.`,
       html: `<h2>New Design Studio request</h2><table>${html}</table><p>The final mockup and submitted artwork are attached.</p>`,
       attachments: [mockup, artwork].filter(Boolean),
     });
