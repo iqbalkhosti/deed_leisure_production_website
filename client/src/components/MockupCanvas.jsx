@@ -21,15 +21,13 @@ const PRODUCT_ASSETS = {
 
 const PRODUCT_MASKS = {
   tshirt: {
-    css: 'polygon(38% 9%, 62% 9%, 76% 16%, 95% 35%, 80% 44%, 72% 34%, 72% 92%, 28% 92%, 28% 34%, 20% 44%, 5% 35%, 24% 16%)',
-    points: [[.38, .09], [.62, .09], [.76, .16], [.95, .35], [.80, .44], [.72, .34], [.72, .92], [.28, .92], [.28, .34], [.20, .44], [.05, .35], [.24, .16]],
+    front: [[.38, .088], [.62, .088], [.80, .156], [.955, .35], [.78, .425], [.746, .345], [.746, .92], [.254, .92], [.254, .345], [.22, .425], [.045, .35], [.20, .156]],
+    back: [[.39, .075], [.61, .075], [.775, .15], [.955, .35], [.78, .425], [.745, .34], [.725, .90], [.62, .93], [.38, .93], [.275, .90], [.255, .34], [.22, .425], [.045, .35], [.225, .15]],
   },
   hoodie: {
-    css: 'polygon(37% 8%, 63% 8%, 79% 17%, 94% 41%, 84% 48%, 76% 40%, 75% 94%, 25% 94%, 24% 40%, 16% 48%, 6% 41%, 21% 17%)',
     points: [[.37, .08], [.63, .08], [.79, .17], [.94, .41], [.84, .48], [.76, .40], [.75, .94], [.25, .94], [.24, .40], [.16, .48], [.06, .41], [.21, .17]],
   },
   polo: {
-    css: 'polygon(37% 8%, 63% 8%, 80% 18%, 95% 35%, 80% 43%, 72% 34%, 71% 94%, 29% 94%, 28% 34%, 20% 43%, 5% 35%, 20% 18%)',
     points: [[.37, .08], [.63, .08], [.80, .18], [.95, .35], [.80, .43], [.72, .34], [.71, .94], [.29, .94], [.28, .34], [.20, .43], [.05, .35], [.20, .18]],
   },
 };
@@ -72,12 +70,14 @@ function bounded(value) {
   return Math.min(92, Math.max(8, value));
 }
 
-function applyColorOverlay(context, product, color, width, height) {
-  const mask = PRODUCT_MASKS[product];
-  if (!mask || color === '#ffffff') return;
+function tintGarment(context, product, side, color, width, height) {
+  const productMask = PRODUCT_MASKS[product];
+  const mask = productMask?.[side] ?? productMask;
+  const points = Array.isArray(mask) ? mask : mask?.points;
+  if (!points || color === '#ffffff') return;
   context.save();
   context.beginPath();
-  mask.points.forEach(([x, y], index) => {
+  points.forEach(([x, y], index) => {
     if (index === 0) context.moveTo(width * x, height * y);
     else context.lineTo(width * x, height * y);
   });
@@ -87,6 +87,35 @@ function applyColorOverlay(context, product, color, width, height) {
   context.fillStyle = color;
   context.fillRect(0, 0, width, height);
   context.restore();
+}
+
+function drawMockupPhoto(context, image, product, side, color, width, height, shouldTint) {
+  context.drawImage(image, 0, 0, width, height);
+  if (shouldTint) tintGarment(context, product, side, color, width, height);
+}
+
+function ProductPhoto({ asset, product, side, garmentColor, shouldTint, onError }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const image = new Image();
+    image.onload = () => {
+      if (cancelled || !canvasRef.current) return;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      drawMockupPhoto(context, image, product, side, garmentColor, canvas.width, canvas.height, shouldTint);
+    };
+    image.onerror = () => {
+      if (!cancelled) onError();
+    };
+    image.src = asset;
+    return () => { cancelled = true; };
+  }, [asset, garmentColor, onError, product, shouldTint, side]);
+
+  return <canvas ref={canvasRef} role="img" aria-label={`${productLabel(product)} ${side} view`} className="absolute inset-0 h-full w-full object-cover" />;
 }
 
 function wrapText(context, value, maxWidth) {
@@ -147,8 +176,7 @@ const MockupCanvas = forwardRef(function MockupCanvas({
 
       try {
         const mockup = await loadImage(asset);
-        context.drawImage(mockup, 0, 0, width, height);
-        if (!usesColorSpecificPhoto) applyColorOverlay(context, product, garmentColor, width, height);
+        drawMockupPhoto(context, mockup, product, side, garmentColor, width, height, !usesColorSpecificPhoto);
       } catch {
         context.fillStyle = garmentColor;
         context.fillRect(width * .27, height * .15, width * .46, height * .72);
@@ -184,7 +212,7 @@ const MockupCanvas = forwardRef(function MockupCanvas({
 
       return canvas.toDataURL('image/png');
     },
-  }), [asset, designImage, designScale, garmentColor, hasText, placement, position, product, rotation, textColor, textFont, textPosition, textSize, textValue, usesColorSpecificPhoto]);
+  }), [asset, designImage, designScale, garmentColor, hasText, placement, position, product, rotation, side, textColor, textFont, textPosition, textSize, textValue, usesColorSpecificPhoto]);
 
   const startDrag = (event, layer) => {
     const currentPosition = layer === 'text' ? textPosition : position;
@@ -226,8 +254,7 @@ const MockupCanvas = forwardRef(function MockupCanvas({
     <div className="mx-auto w-full max-w-[600px]">
       <div ref={previewRef} className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-slate-100 shadow-inner" aria-label={`${productLabel(product)} ${side} mockup`}>
         {isPhotoMockup ? <>
-          <img src={asset} alt={`${productLabel(product)} ${side} view`} className="absolute inset-0 h-full w-full object-cover" onError={() => setAssetIndex((current) => current + 1)} />
-          {garmentColor !== '#ffffff' && !usesColorSpecificPhoto && PRODUCT_MASKS[product] ? <span className="pointer-events-none absolute inset-0 mix-blend-multiply" style={{ backgroundColor: garmentColor, clipPath: PRODUCT_MASKS[product].css }} /> : null}
+          <ProductPhoto asset={asset} product={product} side={side} garmentColor={garmentColor} shouldTint={!usesColorSpecificPhoto} onError={() => setAssetIndex((current) => current + 1)} />
         </> : <><FallbackGarment product={product} color={garmentColor} /><div className="absolute inset-x-8 bottom-5 rounded-lg bg-white/90 px-3 py-2 text-center text-xs text-slate-600 shadow-sm">Add <code className="font-mono">public/mockups/{product === 'tshirt' ? 'gildan-64000' : product}/{colorSlug}/{side}.jpg</code> for this photo mockup.</div></>}
 
         <div className="pointer-events-none absolute border-2 border-dashed border-primary/70 bg-primary/10" style={{ left: `${placement.x - placement.width / 2}%`, top: `${placement.y - placement.height / 2}%`, width: `${placement.width}%`, height: `${placement.height}%` }}><span className="absolute -top-6 left-0 whitespace-nowrap rounded bg-primary px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">{placement.name} · up to {placement.size}</span></div>
