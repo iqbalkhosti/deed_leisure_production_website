@@ -14,6 +14,7 @@ import connectRouter         from './routes/connect.js';
 import deleteUserRouter      from './routes/deleteUser.js';
 import discountCodesRouter   from './routes/discountCodes.js';
 import sendEmailRouter       from './routes/sendEmail.js';
+import designRequestsRouter  from './routes/designRequests.js';
 import { startAutoCloseJob } from './jobs/autoClose.js';
 
 const app  = express();
@@ -65,8 +66,10 @@ app.use('/checkout', rateLimit({
 // ── Webhook route MUST use raw body before express.json() ────────────────────
 app.use('/webhook', express.raw({ type: 'application/json' }), webhookRouter);
 
-// ── JSON body parser — 50kb limit prevents large payload abuse ───────────────
-app.use(express.json({ limit: '50kb' }));
+// ── JSON body parser ─────────────────────────────────────────────────────────
+// Design Studio submissions include a generated mockup PNG. Individual payloads
+// are bounded again by the route and rate limiter below.
+app.use(express.json({ limit: '8mb' }));
 
 // ── Health ───────────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
@@ -80,6 +83,14 @@ app.use('/admin/delete-user',     deleteUserRouter);
 app.use('/admin/discount-codes',  discountCodesRouter);
 app.use('/discount',              discountCodesRouter);
 app.use('/vendor/send-email',     sendEmailRouter);
+app.use('/design-requests', rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many mockup requests. Please try again in an hour.' },
+}));
+app.use('/design-requests',       designRequestsRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req, res) => {

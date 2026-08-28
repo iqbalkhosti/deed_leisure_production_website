@@ -1,591 +1,305 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Upload, ZoomIn, ZoomOut, RotateCw, Move, Download, Save, 
-  Shirt, Settings, Palette, Maximize2, ArrowLeft, Box 
+import {
+  ArrowLeft, Download, Mail, Move, Palette, Shirt, Upload, X,
+  RotateCcw, Maximize2, CheckCircle2, Info,
 } from 'lucide-react';
-import Product3DViewer from '../components/Product3DViewer';
-import ProductTemplates from '../components/ProductTemplates';
+import MockupCanvas from '../components/MockupCanvas';
 import ChatBot from '../components/ChatBot';
+import { submitDesignRequest } from '../lib/api';
+
+const PRODUCTS = [
+  { id: 'tshirt', name: 'T-Shirt', detail: 'Gildan Softstyle 64000', icon: '👕' },
+  { id: 'hoodie', name: 'Hoodie', detail: 'Add your photo assets', icon: '🧥' },
+  { id: 'polo', name: 'Polo', detail: 'Add your photo assets', icon: '👔' },
+  { id: 'tote', name: 'Tote Bag', detail: 'Add your photo assets', icon: '👜' },
+];
+
+const COLORS = [
+  { name: 'White', slug: 'white', value: '#ffffff', dark: false },
+  { name: 'Black', slug: 'black', value: '#171717', dark: true },
+  { name: 'Navy', slug: 'navy', value: '#172554', dark: true },
+  { name: 'Sport Grey', slug: 'sport-grey', value: '#b7bbc2', dark: false },
+  { name: 'Red', slug: 'red', value: '#b91c1c', dark: true },
+  { name: 'Royal', slug: 'royal', value: '#1d4ed8', dark: true },
+  { name: 'Forest', slug: 'forest', value: '#166534', dark: true },
+  { name: 'Maroon', slug: 'maroon', value: '#7f1d1d', dark: true },
+];
+
+const APPAREL_PLACEMENTS = {
+  front: [
+    { id: 'full-front', name: 'Full front', size: '12 × 16 in', x: 50, y: 55, width: 38, height: 45 },
+    { id: 'center-chest', name: 'Center chest', size: '10 × 12 in', x: 50, y: 42, width: 32, height: 30 },
+    { id: 'left-chest', name: 'Left chest', size: '4 × 4 in', x: 61, y: 36, width: 14, height: 14 },
+    { id: 'right-chest', name: 'Right chest', size: '4 × 4 in', x: 39, y: 36, width: 14, height: 14 },
+    { id: 'left-sleeve', name: 'Left sleeve', size: '4 × 4 in', x: 82, y: 37, width: 12, height: 16 },
+  ],
+  back: [
+    { id: 'full-back', name: 'Full back', size: '12 × 16 in', x: 50, y: 55, width: 38, height: 45 },
+    { id: 'upper-back', name: 'Upper back', size: '12 × 4 in', x: 50, y: 31, width: 38, height: 12 },
+    { id: 'back-neck', name: 'Back neck', size: '4 × 2 in', x: 50, y: 22, width: 14, height: 7 },
+  ],
+};
+
+const TOTE_PLACEMENTS = {
+  front: [
+    { id: 'tote-front', name: 'Front centre', size: '10 × 12 in', x: 50, y: 59, width: 44, height: 45 },
+    { id: 'tote-pocket', name: 'Upper front', size: '6 × 6 in', x: 50, y: 43, width: 26, height: 22 },
+  ],
+  back: [
+    { id: 'tote-back', name: 'Back centre', size: '10 × 12 in', x: 50, y: 59, width: 44, height: 45 },
+  ],
+};
+
+function placementsFor(product, side) {
+  return (product === 'tote' ? TOTE_PLACEMENTS : APPAREL_PLACEMENTS)[side];
+}
+
+function placementFor(product, side, id) {
+  return placementsFor(product, side).find((placement) => placement.id === id) ?? placementsFor(product, side)[0];
+}
+
+function titleCase(value) {
+  return value.replaceAll('-', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
 export default function DesignStudio() {
-  const [designImage, setDesignImage] = useState(null);
-  const [product, setProduct] = useState('tshirt');
-  const [garmentColor, setGarmentColor] = useState('#ffffff');
-  const [printLocation, setPrintLocation] = useState('front-center');
-  const [designSize, setDesignSize] = useState(0.8);
-  const [rotation, setRotation] = useState(0);
-  const [selectedSide, setSelectedSide] = useState('front'); // "front" | "back"
-  const [designName, setDesignName] = useState('My Design');
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [savedDesigns, setSavedDesigns] = useState([]);
-  const [view3D, setView3D] = useState(true);
-  const [greyMode, setGreyMode] = useState(false);
-  
   const fileInputRef = useRef(null);
-  const canvasRef = useRef(null);
+  const mockupRef = useRef(null);
+  const [product, setProduct] = useState('tshirt');
+  const [side, setSide] = useState('front');
+  const [placementId, setPlacementId] = useState('full-front');
+  const [garmentColor, setGarmentColor] = useState('#ffffff');
+  const [designImage, setDesignImage] = useState(null);
+  const [designFileName, setDesignFileName] = useState('');
+  const [position, setPosition] = useState({ x: 50, y: 55 });
+  const [designScale, setDesignScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [showHatDialog, setShowHatDialog] = useState(false);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [requestState, setRequestState] = useState({ status: 'idle', error: '', reference: '' });
+  const [contact, setContact] = useState({ name: '', email: '', phone: '', organization: '', notes: '' });
 
-  // Load saved designs from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('savedDesigns');
-    if (saved) {
-      setSavedDesigns(JSON.parse(saved));
-    }
-  }, []);
+  const placement = placementFor(product, side, placementId);
+  const selectedColor = COLORS.find((color) => color.value === garmentColor);
 
-  const products = [
-    { id: 'tshirt', name: 'T-Shirt', icon: '👕', locations: ['front-center', 'front-left', 'back-center', 'sleeve'] },
-    { id: 'polo',   name: 'Polo',    icon: '👔', locations: ['front-center', 'front-left', 'back-center', 'sleeve'] },
-    { id: 'hoodie', name: 'Hoodie',  icon: '🧥', locations: ['front-center', 'front-left', 'back-center', 'sleeve'] },
-    { id: 'hat',    name: 'Hat',     icon: '🧢', locations: ['front-center', 'side', 'back'] },
-    { id: 'banner', name: 'Banner',  icon: '🚩', locations: ['front-center'] },
-  ];
-
-  const colors = [
-    { name: 'White', value: '#ffffff', dark: false },
-    { name: 'Black', value: '#000000', dark: true },
-    { name: 'Navy', value: '#001f3f', dark: true },
-    { name: 'Gray', value: '#aaaaaa', dark: false },
-    { name: 'Red', value: '#ff4136', dark: true },
-    { name: 'Royal Blue', value: '#0074d9', dark: true },
-    { name: 'Forest Green', value: '#2ecc40', dark: false },
-    { name: 'Maroon', value: '#85144b', dark: true },
-  ];
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setDesignImage(event.target.result);
-        setRotation(0); // reset rotation on new upload
-      };
-      reader.readAsDataURL(file);
-    }
+  const chooseProduct = (nextProduct) => {
+    setProduct(nextProduct);
+    setSide('front');
+    const nextPlacement = placementsFor(nextProduct, 'front')[0];
+    setPlacementId(nextPlacement.id);
+    setPosition({ x: nextPlacement.x, y: nextPlacement.y });
   };
 
-  const handleProductChange = (newProduct) => {
-    setProduct(newProduct);
-    // Reset to first available location for new product
-    const productData = products.find(p => p.id === newProduct);
-    if (productData) {
-      setPrintLocation(productData.locations[0]);
-    }
+  const chooseSide = (nextSide) => {
+    setSide(nextSide);
+    const nextPlacement = placementsFor(product, nextSide)[0];
+    setPlacementId(nextPlacement.id);
+    setPosition({ x: nextPlacement.x, y: nextPlacement.y });
   };
 
-  const exportDesign = () => {
-    if (!canvasRef.current || !designImage) return;
+  const choosePlacement = (nextPlacementId) => {
+    const nextPlacement = placementFor(product, side, nextPlacementId);
+    setPlacementId(nextPlacement.id);
+    setPosition({ x: nextPlacement.x, y: nextPlacement.y });
+  };
 
-    // Create a temporary canvas
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Set canvas size
-    canvas.width = 800;
-    canvas.height = 1000;
-    
-    // Clone the SVG
-    const svgElement = canvasRef.current.querySelector('svg');
-    const svgString = new XMLSerializer().serializeToString(svgElement);
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-    
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
-      // Convert to downloadable image
-      canvas.toBlob((blob) => {
-        const downloadUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${designName.replace(/\s+/g, '-').toLowerCase()}-${product}.png`;
-        link.click();
-        URL.revokeObjectURL(downloadUrl);
+  const uploadArtwork = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      setRequestState({ status: 'idle', error: 'Please use an artwork file smaller than 4 MB.', reference: '' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setDesignImage(reader.result);
+      setDesignFileName(file.name);
+      setRequestState({ status: 'idle', error: '', reference: '' });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const resetArtwork = () => {
+    setDesignImage(null);
+    setDesignFileName('');
+    setDesignScale(1);
+    setRotation(0);
+    setPosition({ x: placement.x, y: placement.y });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const exportDesign = async () => {
+    if (!designImage || !mockupRef.current) return;
+    const imageUrl = await mockupRef.current.toDataUrl();
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `deed-leisure-${product}-${side}-mockup.png`;
+    link.click();
+  };
+
+  const openRequest = () => {
+    setRequestState({ status: 'idle', error: '', reference: '' });
+    setShowRequestDialog(true);
+  };
+
+  const submitRequest = async (event) => {
+    event.preventDefault();
+    if (!mockupRef.current || !designImage) return;
+    setRequestState({ status: 'sending', error: '', reference: '' });
+    try {
+      const mockupDataUrl = await mockupRef.current.toDataUrl();
+      const result = await submitDesignRequest({
+        contact,
+        design: {
+          product: PRODUCTS.find((item) => item.id === product)?.name ?? product,
+          color: selectedColor?.name ?? garmentColor,
+          side: titleCase(side),
+          placement: `${placement.name} (up to ${placement.size})`,
+          mockupDataUrl,
+          artworkDataUrl: designImage,
+        },
       });
-      
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
-  };
-
-  const saveDesign = () => {
-    const design = {
-      id: Date.now(),
-      name: designName,
-      image: designImage,
-      product,
-      garmentColor,
-      printLocation,
-      designSize,
-      rotation,
-      createdAt: new Date().toISOString()
-    };
-
-    const updated = [...savedDesigns, design];
-    setSavedDesigns(updated);
-    localStorage.setItem('savedDesigns', JSON.stringify(updated));
-    setShowSaveModal(false);
-    
-    // Show success message
-    alert('Design saved successfully!');
-  };
-
-  const loadDesign = (design) => {
-    setDesignImage(design.image);
-    setProduct(design.product);
-    setGarmentColor(design.garmentColor);
-    setPrintLocation(design.printLocation);
-    setDesignSize(design.designSize);
-    setRotation(design.rotation);
-    setDesignName(design.name);
-  };
-
-  const deleteDesign = (id) => {
-    if (confirm('Are you sure you want to delete this design?')) {
-      const updated = savedDesigns.filter(d => d.id !== id);
-      setSavedDesigns(updated);
-      localStorage.setItem('savedDesigns', JSON.stringify(updated));
+      setRequestState({ status: 'success', error: '', reference: result.reference });
+    } catch (error) {
+      setRequestState({ status: 'idle', error: error.message || 'Unable to send your request. Please try again.', reference: '' });
     }
   };
-
-  const resetDesign = () => {
-    if (confirm('Reset all design settings?')) {
-      setDesignImage(null);
-      setDesignSize(0.8);
-      setRotation(0);
-      setDesignName('My Design');
-    }
-  };
-
-  const currentProduct = products.find(p => p.id === product);
-  const printLocations = currentProduct?.locations.map(loc => ({
-    id: loc,
-    name: loc.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-  })) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Link to="/" className="text-gray-600 hover:text-primary mr-4">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <h1 className="text-2xl font-bold">Design Studio</h1>
-            </div>
-            <div className="flex items-center gap-3">
-              {designImage && (
-                <>
-                  <button
-                    onClick={() => setShowSaveModal(true)}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Design
-                  </button>
-                  <button
-                    onClick={exportDesign}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                  </button>
-                </>
-              )}
+    <div className="min-h-screen bg-slate-50">
+      <header className="sticky top-0 z-20 border-b bg-white/95 backdrop-blur">
+        <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Link to="/" aria-label="Back to home" className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-primary"><ArrowLeft className="h-5 w-5" /></Link>
+            <div>
+              <h1 className="text-xl font-bold sm:text-2xl">Design Studio</h1>
+              <p className="hidden text-xs text-slate-500 sm:block">2D placement preview for custom apparel</p>
             </div>
           </div>
+          <button onClick={exportDesign} disabled={!designImage} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4">
+            <Download className="h-4 w-4" /> <span className="hidden sm:inline">Export mockup</span><span className="sm:hidden">Export</span>
+          </button>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - Controls */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Upload Section */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="font-semibold mb-4 flex items-center">
-                <Upload className="w-5 h-5 mr-2" />
-                Upload Design
-              </h3>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept="image/*"
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full flex flex-col items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-primary transition-colors"
-              >
-                <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-600 font-medium">Click to upload</span>
-                <span className="text-xs text-gray-500 mt-1">PNG, SVG, JPG (Max 5MB)</span>
+      <main className="container mx-auto px-4 py-7 lg:py-10">
+        <div className="mb-7 max-w-3xl">
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"><Info className="h-3.5 w-3.5" /> Industry-standard decoration guides</span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">Build a mockup that your production team can approve.</h2>
+          <p className="mt-2 text-slate-600">Choose a standard print or embroidery placement, then drag your art for the final adjustment. The same placement guidelines apply to both decoration methods.</p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <aside className="space-y-5">
+            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <h3 className="flex items-center gap-2 font-semibold"><Upload className="h-5 w-5 text-primary" /> Your artwork</h3>
+              <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={uploadArtwork} className="hidden" />
+              <button onClick={() => fileInputRef.current?.click()} className="mt-4 flex h-28 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-sm transition hover:border-primary hover:bg-primary/5">
+                <Upload className="mb-2 h-6 w-6 text-slate-400" />
+                <span className="font-medium text-slate-700">Upload artwork</span>
+                <span className="mt-1 text-xs text-slate-500">PNG, JPG, or SVG · 4 MB maximum</span>
               </button>
-              {designImage && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Current Design</span>
-                    <button
-                      onClick={resetDesign}
-                      className="text-xs text-red-600 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                  <img src={designImage} alt="Uploaded design" className="w-full h-20 object-contain bg-gray-50 rounded p-2" />
+              {designImage ? (
+                <div className="mt-3 flex items-center gap-3 rounded-lg bg-slate-50 p-2">
+                  <img src={designImage} alt="Uploaded artwork" className="h-12 w-12 rounded bg-white object-contain p-1" />
+                  <p className="min-w-0 flex-1 truncate text-sm text-slate-600">{designFileName}</p>
+                  <button onClick={resetArtwork} className="rounded p-1.5 text-slate-500 hover:bg-white hover:text-red-600" aria-label="Remove artwork"><X className="h-4 w-4" /></button>
                 </div>
-              )}
-            </div>
+              ) : null}
+              {requestState.error && !showRequestDialog ? <p className="mt-3 text-sm text-red-600">{requestState.error}</p> : null}
+            </section>
 
-            {/* Product Selection */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="font-semibold mb-4 flex items-center">
-                <Shirt className="w-5 h-5 mr-2" />
-                Select Product
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {products.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => handleProductChange(p.id)}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      product === p.id 
-                        ? 'border-primary bg-primary/5 shadow-sm' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="text-3xl mb-2">{p.icon}</div>
-                    <div className="text-sm font-medium">{p.name}</div>
+            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <h3 className="flex items-center gap-2 font-semibold"><Shirt className="h-5 w-5 text-primary" /> Choose a product</h3>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {PRODUCTS.map((item) => (
+                  <button key={item.id} onClick={() => chooseProduct(item.id)} className={`rounded-xl border-2 p-3 text-left transition ${product === item.id ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'}`}>
+                    <span className="text-2xl" aria-hidden="true">{item.icon}</span>
+                    <span className="mt-1 block text-sm font-semibold">{item.name}</span>
+                    <span className="block text-[11px] leading-tight text-slate-500">{item.detail}</span>
+                  </button>
+                ))}
+                <button onClick={() => setShowHatDialog(true)} className="rounded-xl border-2 border-dashed border-slate-300 p-3 text-left transition hover:border-primary hover:bg-primary/5">
+                  <span className="text-2xl" aria-hidden="true">🧢</span>
+                  <span className="mt-1 block text-sm font-semibold">Hats</span>
+                  <span className="block text-[11px] leading-tight text-slate-500">Request a guided mockup</span>
+                </button>
+              </div>
+            </section>
+
+            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <h3 className="flex items-center gap-2 font-semibold"><Palette className="h-5 w-5 text-primary" /> Garment colour</h3>
+              <div className="mt-4 grid grid-cols-4 gap-3">
+                {COLORS.map((color) => (
+                  <button key={color.value} onClick={() => setGarmentColor(color.value)} title={color.name} aria-label={color.name} className={`relative aspect-square rounded-full border-2 transition ${garmentColor === color.value ? 'scale-110 border-primary ring-2 ring-primary/20' : 'border-slate-300 hover:scale-105'}`} style={{ backgroundColor: color.value }}>
+                    {garmentColor === color.value ? <span className={`absolute inset-0 grid place-items-center text-sm ${color.dark ? 'text-white' : 'text-slate-800'}`}>✓</span> : null}
                   </button>
                 ))}
               </div>
-            </div>
+              <p className="mt-3 text-xs text-slate-500">{selectedColor?.name}. Add product photos for each colour when available; the tee uses a colour-tinted photo preview in the meantime.</p>
+            </section>
 
-            {/* Color Selection */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="font-semibold mb-4 flex items-center">
-                <Palette className="w-5 h-5 mr-2" />
-                Garment Color
-              </h3>
-              <div className="grid grid-cols-4 gap-3">
-                {colors.map((c) => (
-                  <button
-                    key={c.value}
-                    onClick={() => setGarmentColor(c.value)}
-                    className={`w-full aspect-square rounded-lg border-2 transition-all ${
-                      garmentColor === c.value 
-                        ? 'border-primary scale-110 shadow-lg' 
-                        : 'border-gray-300 hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: c.value }}
-                    title={c.name}
-                  >
-                    {garmentColor === c.value && (
-                      <div className={`w-full h-full flex items-center justify-center ${c.dark ? 'text-white' : 'text-gray-800'}`}>
-                        ✓
-                      </div>
-                    )}
-                  </button>
-                ))}
+            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <h3 className="flex items-center gap-2 font-semibold"><Move className="h-5 w-5 text-primary" /> Placement & adjustment</h3>
+              <div className="mt-4 flex rounded-lg bg-slate-100 p-1">
+                {['front', 'back'].map((option) => <button key={option} onClick={() => chooseSide(option)} className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${side === option ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{titleCase(option)}</button>)}
               </div>
-            </div>
-
-            {/* Print Location */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="font-semibold mb-4 flex items-center">
-                <Settings className="w-5 h-5 mr-2" />
-                Print Location
-              </h3>
-              <select 
-                value={printLocation}
-                onChange={(e) => setPrintLocation(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-              >
-                {printLocations.map((loc) => (
-                  <option key={loc.id} value={loc.id}>{loc.name}</option>
-                ))}
+              <label className="mt-4 block text-sm font-medium text-slate-700" htmlFor="placement">Standard placement</label>
+              <select id="placement" value={placementId} onChange={(event) => choosePlacement(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+                {placementsFor(product, side).map((option) => <option key={option.id} value={option.id}>{option.name} — up to {option.size}</option>)}
               </select>
-            </div>
+              {designImage ? <>
+                <label className="mt-4 flex items-center justify-between text-sm text-slate-700" htmlFor="scale"><span className="flex items-center gap-2"><Maximize2 className="h-4 w-4" /> Artwork size</span><span>{Math.round(designScale * 100)}%</span></label>
+                <input id="scale" className="mt-2 w-full accent-primary" type="range" min="60" max="120" value={designScale * 100} onChange={(event) => setDesignScale(Number(event.target.value) / 100)} />
+                <label className="mt-4 flex items-center justify-between text-sm text-slate-700" htmlFor="rotation"><span>Rotation</span><span>{rotation}°</span></label>
+                <div className="mt-2 flex gap-2"><input id="rotation" className="w-full accent-primary" type="range" min="-30" max="30" value={rotation} onChange={(event) => setRotation(Number(event.target.value))} /><button onClick={() => setRotation(0)} className="rounded-md border border-slate-200 px-2 text-xs font-medium hover:bg-slate-50" aria-label="Reset rotation"><RotateCcw className="h-4 w-4" /></button></div>
+              </> : null}
+            </section>
+          </aside>
 
-            {/* Design Controls */}
-            {designImage && (
-              <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold mb-4 flex items-center">
-                  <Maximize2 className="w-5 h-5 mr-2" />
-                  Adjust Design
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm text-gray-600">Size</label>
-                      <span className="text-sm font-medium">{Math.round(designSize * 100)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="30"
-                      max="150"
-                      value={designSize * 100}
-                      onChange={(e) => setDesignSize(e.target.value / 100)}
-                      className="w-full accent-primary"
-                    />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm text-gray-600">Design Rotation</label>
-                      <span className="text-sm font-medium">{rotation}°</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="-90"
-                      max="90"
-                      value={rotation}
-                      onChange={(e) => setRotation(parseInt(e.target.value))}
-                      className="w-full accent-primary"
-                    />
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      onClick={() => setRotation(r => Math.max(-90, r - 45))}
-                      className="flex-1 px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center"
-                      title="Rotate left 45°"
-                    >
-                      <RotateCw className="w-4 h-4 transform scale-x-[-1]" />
-                    </button>
-                    <button
-                      onClick={() => setRotation(0)}
-                      className="flex-1 px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium"
-                      title="Reset rotation"
-                    >
-                      0°
-                    </button>
-                    <button
-                      onClick={() => setRotation(r => Math.min(90, r + 45))}
-                      className="flex-1 px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center"
-                      title="Rotate right 45°"
-                    >
-                      <RotateCw className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
+          <section className="min-w-0">
+            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div><h3 className="text-lg font-semibold">Photorealistic 2D preview</h3><p className="text-sm text-slate-500">{PRODUCTS.find((item) => item.id === product)?.name} · {titleCase(side)} · {placement.name}</p></div>
+                <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">Print & embroidery area</span>
               </div>
-            )}
-
-            {/* Saved Designs */}
-            {savedDesigns.length > 0 && (
-              <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold mb-4">Saved Designs ({savedDesigns.length})</h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {savedDesigns.map((design) => (
-                    <div key={design.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                      <div className="flex items-center flex-1">
-                        <img src={design.image} alt={design.name} className="w-10 h-10 object-contain bg-white rounded mr-3" />
-                        <div>
-                          <div className="text-sm font-medium">{design.name}</div>
-                          <div className="text-xs text-gray-500">{design.product}</div>
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => loadDesign(design)}
-                          className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90"
-                        >
-                          Load
-                        </button>
-                        <button
-                          onClick={() => deleteDesign(design.id)}
-                          className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Panel - Preview */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl p-8 shadow-sm sticky top-24">
-              <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-                <h3 className="font-semibold text-lg">Live Preview</h3>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* Front / Back side selector */}
-                  {view3D && (
-                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                      <button
-                        onClick={() => setSelectedSide('front')}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${selectedSide === 'front' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                      >
-                        Front
-                      </button>
-                      <button
-                        onClick={() => setSelectedSide('back')}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${selectedSide === 'back' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                      >
-                        Back
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Grey / Mockup mode toggle */}
-                  {view3D && (
-                    <button
-                      onClick={() => setGreyMode(g => !g)}
-                      title="Grey mockup mode — shows design on neutral grey garment"
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors flex items-center gap-1.5 ${
-                        greyMode
-                          ? 'bg-gray-700 text-white border-gray-700'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-                      }`}
-                    >
-                      <span className="w-3.5 h-3.5 rounded-full inline-block border border-current"
-                        style={{ background: greyMode ? '#c0c0c0' : 'transparent' }}
-                      />
-                      Mockup
-                    </button>
-                  )}
-
-                  {/* 3D / 2D switcher */}
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                    <button
-                      onClick={() => setView3D(true)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                        view3D
-                          ? 'bg-white text-primary shadow-sm'
-                          : 'text-gray-600 hover:text-gray-800'
-                      }`}
-                    >
-                      <Box className="w-4 h-4" />
-                      3D View
-                    </button>
-                    <button
-                      onClick={() => setView3D(false)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                        !view3D
-                          ? 'bg-white text-primary shadow-sm'
-                          : 'text-gray-600 hover:text-gray-800'
-                      }`}
-                    >
-                      2D Flat
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div 
-                ref={canvasRef}
-                className="mx-auto"
-                style={{ maxWidth: '600px', minHeight: '500px' }}
-              >
-                {view3D ? (
-                  <Product3DViewer
-                    product={product}
-                    designImage={designImage}
-                    garmentColor={garmentColor}
-                    printLocation={printLocation}
-                    designSize={designSize}
-                    designRotation={rotation}
-                    greyMode={greyMode}
-                    selectedSide={selectedSide}
-                  />
-                ) : (
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <ProductTemplates
-                      type={product}
-                      color={garmentColor}
-                      printLocation={printLocation}
-                      designSize={designSize}
-                      rotation={rotation}
-                      designImage={designImage}
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <div className="mt-6 text-center space-y-2">
-                {view3D && (
-                  <p className="text-sm text-primary font-medium mb-2">
-                    ✨ Interactive 3D Model - Drag to rotate, scroll to zoom
-                  </p>
-                )}
-                <p className="text-sm text-gray-600">
-                  Your design will be printed at high resolution
-                </p>
-                <p className="text-xs text-gray-500">
-                  This is a preview only - actual colors may vary slightly
-                </p>
-                {designImage && (
-                  <div className="mt-4 pt-4 border-t">
-                    <Link
-                      to="/contact"
-                      className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                    >
-                      Get a Quote for This Design
-                    </Link>
-                  </div>
-                )}
+              <MockupCanvas ref={mockupRef} product={product} side={side} garmentColor={garmentColor} colorSlug={selectedColor?.slug ?? 'white'} designImage={designImage} placement={placement} position={position} designScale={designScale} rotation={rotation} onPositionChange={setPosition} />
+              <div className="mt-6 flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-600">{designImage ? 'Your mockup is ready to send for approval.' : 'Upload artwork to see it on the garment.'}</p>
+                <button onClick={openRequest} disabled={!designImage} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"><Mail className="h-4 w-4" /> Submit mockup request</button>
               </div>
             </div>
-
-            {/* Design Tips */}
-            <div className="mt-6 bg-blue-50 rounded-xl p-6">
-              <h4 className="font-semibold mb-3">💡 Design Tips</h4>
-              <ul className="space-y-2 text-sm text-gray-700">
-                <li>• Use PNG files with transparent backgrounds for best results</li>
-                <li>• Vector files (SVG) will scale perfectly to any size</li>
-                <li>• Consider contrast - dark designs on dark garments won't show well</li>
-                <li>• Recommended design width: 10-12 inches for front/back, 3-4 inches for left chest</li>
-                <li>• High resolution: at least 300 DPI for print quality</li>
+            <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 p-5 text-sm text-slate-700">
+              <h4 className="font-semibold">Production guide</h4>
+              <ul className="mt-2 space-y-1.5">
+                <li>• Standard placement limits are shown in the dashed area; any custom drag is sent to the production team for approval.</li>
+                <li>• Use a transparent PNG or SVG whenever possible. For raster art, start with artwork prepared at 300 DPI.</li>
+                <li>• A submitted request is reviewed before production; colours and finished placement can vary slightly by garment and decoration method.</li>
               </ul>
             </div>
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
 
-      {/* Save Modal */}
-      {showSaveModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Save Design</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Design Name
-              </label>
-              <input
-                type="text"
-                value={designName}
-                onChange={(e) => setDesignName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                placeholder="Enter design name"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowSaveModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveDesign}
-                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                Save
-              </button>
-            </div>
-          </div>
+      {showHatDialog ? <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="hat-title">
+        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"><div className="flex items-start justify-between gap-4"><div><h3 id="hat-title" className="text-xl font-bold">Need hats?</h3><p className="mt-2 text-slate-600">Hat decoration needs a quick production check for panel seams, curved surfaces, and embroidery backing. We’ll prepare the right mockup with you.</p></div><button onClick={() => setShowHatDialog(false)} className="rounded p-1 text-slate-500 hover:bg-slate-100" aria-label="Close"><X className="h-5 w-5" /></button></div><a href="mailto:info@deedleisure.ca?subject=Hat%20mockup%20request" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-white hover:bg-primary/90"><Mail className="h-4 w-4" /> Email us about hats</a></div>
+      </div> : null}
+
+      {showRequestDialog ? <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 p-4 sm:grid sm:place-items-center" role="dialog" aria-modal="true" aria-labelledby="request-title">
+        <div className="my-8 w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl sm:my-0">
+          {requestState.status === 'success' ? <div className="py-4 text-center"><CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" /><h3 className="mt-4 text-xl font-bold">Request sent</h3><p className="mt-2 text-slate-600">Your mockup was sent to our team. Keep this reference for follow-up:</p><p className="mt-3 font-mono text-lg font-bold text-primary">{requestState.reference}</p><button onClick={() => setShowRequestDialog(false)} className="mt-6 rounded-lg bg-slate-900 px-5 py-2.5 font-medium text-white hover:bg-slate-700">Done</button></div> : <>
+            <div className="flex items-start justify-between gap-4"><div><h3 id="request-title" className="text-xl font-bold">Submit your mockup request</h3><p className="mt-1 text-sm text-slate-600">We’ll email the final preview and your details to the Deed Leisure team.</p></div><button onClick={() => setShowRequestDialog(false)} className="rounded p-1 text-slate-500 hover:bg-slate-100" aria-label="Close"><X className="h-5 w-5" /></button></div>
+            <form className="mt-5 space-y-4" onSubmit={submitRequest}>
+              <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-medium text-slate-700">Name<input required value={contact.name} onChange={(event) => setContact({ ...contact, name: event.target.value })} className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" /></label><label className="text-sm font-medium text-slate-700">Email<input type="email" required value={contact.email} onChange={(event) => setContact({ ...contact, email: event.target.value })} className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" /></label></div>
+              <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-medium text-slate-700">Phone <span className="font-normal text-slate-400">(optional)</span><input value={contact.phone} onChange={(event) => setContact({ ...contact, phone: event.target.value })} className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" /></label><label className="text-sm font-medium text-slate-700">Organization <span className="font-normal text-slate-400">(optional)</span><input value={contact.organization} onChange={(event) => setContact({ ...contact, organization: event.target.value })} className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" /></label></div>
+              <label className="block text-sm font-medium text-slate-700">Notes <span className="font-normal text-slate-400">(optional)</span><textarea rows="4" value={contact.notes} onChange={(event) => setContact({ ...contact, notes: event.target.value })} placeholder="Quantity, due date, print/embroidery preference, or anything else we should know." className="mt-1.5 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" /></label>
+              {requestState.error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{requestState.error}</p> : null}
+              <button type="submit" disabled={requestState.status === 'sending'} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-white hover:bg-primary/90 disabled:opacity-60"><Mail className="h-4 w-4" />{requestState.status === 'sending' ? 'Sending request…' : 'Send mockup request'}</button>
+            </form>
+          </>}
         </div>
-      )}
-
+      </div> : null}
       <ChatBot />
     </div>
   );

@@ -89,3 +89,11 @@ export function createDiscountCode(payload) {
 export function deleteDiscountCode(id) {
   return apiFetch(`/admin/discount-codes/${id}`, { method: 'DELETE' });
 }
+
+// ─── Public: Design Studio mockup request ────────────────────────────────────
+export function submitDesignRequest(payload) {
+  return apiFetch('/design-requests', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
