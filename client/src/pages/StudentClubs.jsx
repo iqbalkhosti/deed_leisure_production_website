@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, BadgeDollarSign, Clock, Sparkles, Calendar, CheckCircle } from 'lucide-react';
 import ChatBot from '../components/ChatBot';
+import QuoteForm from '../components/QuoteForm';
+import useSeo from '../hooks/useSeo';
+import site from '../data/site';
 
 export default function StudentClubs() {
-  const [formData, setFormData] = useState({
-    name: '',
-    clubName: '',
-    email: '',
-    quantity: '',
-    notes: ''
+  useSeo({
+    title: 'Custom apparel for student clubs',
+    description: 'Club pricing, small minimums, and turnaround that fits a semester. Custom tees, hoodies, and polos for student organizations.',
+    path: '/student-clubs',
   });
-  const [formSubmitted, setFormSubmitted] = useState(false);
+
 
   const benefits = [
     {
@@ -31,28 +32,10 @@ export default function StudentClubs() {
     },
     {
       icon: CheckCircle,
-      title: 'No Minimums',
-      description: 'Flexible order sizes for clubs of all sizes'
+      title: 'Low Minimums',
+      description: `Start at ${site.minimumOrder} pieces — sized for a small exec team, not a warehouse`
     }
   ];
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setFormSubmitted(true);
-    setFormData({
-      name: '',
-      clubName: '',
-      email: '',
-      quantity: '',
-      notes: ''
-    });
-    setTimeout(() => setFormSubmitted(false), 5000);
-  };
 
   return (
     <div className="min-h-screen">
@@ -154,102 +137,13 @@ export default function StudentClubs() {
           <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm p-8">
             <h2 className="text-3xl font-bold text-center mb-8">Get Your Club Quote</h2>
             
-            {formSubmitted && (
-              <div className="bg-green-50 text-green-700 p-4 rounded-lg mb-6">
-                <p className="font-medium">Thanks! We'll be in touch within 24 hours.</p>
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-gray-700 font-medium mb-2">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="clubName" className="block text-gray-700 font-medium mb-2">
-                    Club Name
-                  </label>
-                  <input
-                    type="text"
-                    id="clubName"
-                    name="clubName"
-                    value={formData.clubName}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="quantity" className="block text-gray-700 font-medium mb-2">
-                    Quantity Needed
-                  </label>
-                  <select
-                    id="quantity"
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  >
-                    <option value="">Select quantity</option>
-                    <option value="10-25">10-25 items</option>
-                    <option value="25-50">25-50 items</option>
-                    <option value="50-100">50-100 items</option>
-                    <option value="100+">100+ items</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="notes" className="block text-gray-700 font-medium mb-2">
-                    Tell us about your project
-                  </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Event details, timeline, design ideas..."
-                  ></textarea>
-                </div>
-                
-                <button
-                  type="submit"
-                  className="w-full px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Submit Quote Request
-                </button>
-              </div>
-            </form>
+            <QuoteForm
+              source="Student clubs"
+              organizationLabel="Club name"
+              messageLabel="Tell us about your order"
+              messagePlaceholder="Which products, rough sizes, whether you have artwork, and the event date."
+              submitLabel="Get club pricing"
+            />
           </div>
         </div>
       </section>

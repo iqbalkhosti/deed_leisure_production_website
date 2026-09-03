@@ -1,189 +1,151 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shirt, Package, Palette, BadgeDollarSign } from 'lucide-react';
+import { Check, ArrowRight, Palette } from 'lucide-react';
+import GarmentShowcase from '../components/GarmentShowcase';
 import ChatBot from '../components/ChatBot';
+import useSeo from '../hooks/useSeo';
+import site from '../data/site';
+import { PRODUCTS, DECORATION_METHODS, GARMENT_COLORS } from '../data/catalog';
+
+const money = new Intl.NumberFormat('en-CA', {
+  style: 'currency', currency: 'CAD', maximumFractionDigits: 0,
+});
 
 export default function Products() {
-  // Sample product categories
-  const categories = [
-    {
-      name: 'T-Shirts',
-      description: 'Premium cotton and blended tees in various styles and fits.',
-      icon: Shirt,
-      image: '/products/tshirts.jpg',
-      link: '/products/t-shirts'
-    },
-    {
-      name: 'Hoodies & Sweatshirts',
-      description: 'Cozy hoodies and crewnecks perfect for any season.',
-      icon: Package,
-      image: '/products/hoodies.jpg',
-      link: '/products/hoodies'
-    },
-    {
-      name: 'Polos & Button-Ups',
-      description: 'Professional polos and button-ups for a polished look.',
-      icon: Shirt,
-      image: '/products/polos.jpg',
-      link: '/products/polos'
-    },
-    {
-      name: 'Accessories',
-      description: 'Hats, bags, and more to complete your custom collection.',
-      icon: Palette,
-      image: '/products/accessories.jpg',
-      link: '/products/accessories'
-    }
-  ];
-
-  // Sample printing methods
-  const printingMethods = [
-    {
-      name: 'Screen Printing',
-      description: 'Durable, vibrant prints ideal for solid colors and large quantities.',
-      minQuantity: '12+ items',
-      bestFor: 'Team uniforms, events, simple designs'
-    },
-    {
-      name: 'DTG (Direct to Garment)',
-      description: 'High-detail, full-color prints with no minimum quantity.',
-      minQuantity: 'No minimum',
-      bestFor: 'Photo prints, gradients, one-offs'
-    },
-    {
-      name: 'Embroidery',
-      description: 'Premium, textured finish that\'s perfect for logos and text.',
-      minQuantity: '6+ items',
-      bestFor: 'Corporate wear, polos, hats'
-    },
-    {
-      name: 'Vinyl Heat Transfer',
-      description: 'Versatile option for names, numbers, and simple designs.',
-      minQuantity: 'No minimum',
-      bestFor: 'Sports jerseys, names/numbers'
-    }
-  ];
+  useSeo({
+    title: 'Products & pricing',
+    description: `T-shirts, hoodies, polos, hats, and bags with screen printing, DTF, and embroidery. Starting prices, fabrics, and minimums from ${site.name}.`,
+    path: '/products',
+  });
 
   return (
-    <div className="min-h-screen">
-      {/* Hero section */}
-      <section className="bg-blue-50 py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Products</h1>
-            <p className="text-lg text-gray-600 mb-8">
-              Explore our range of high-quality apparel options ready for your custom designs.
-              From casual tees to professional polos, we've got the perfect canvas for your vision.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link 
-                to="/design-studio" 
-                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                Start Designing
-              </Link>
-              <Link 
-                to="/contact" 
-                className="px-6 py-3 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Get a Quote
-              </Link>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white">
+      <section className="border-b border-gray-100 bg-blue-50 py-14">
+        <div className="container mx-auto max-w-3xl px-4 text-center">
+          <h1 className="text-3xl font-bold md:text-4xl">Products &amp; pricing</h1>
+          <p className="mt-3 text-lg text-gray-600">
+            Prices below are per piece at the {site.minimumOrder}-piece minimum with one decoration
+            location, in Canadian dollars. Bigger runs and simpler artwork bring them down — we
+            confirm every quote before anything is printed.
+          </p>
         </div>
       </section>
 
-      {/* Product categories */}
-      <section className="py-16">
+      <section className="py-14">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Product Categories</h2>
-          
-          {/* 4 products in a single row on large screens */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <div
-                key={category.name}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
+          <div className="grid gap-10">
+            {PRODUCTS.map((product, index) => (
+              <article
+                key={product.id}
+                className={`grid items-center gap-8 rounded-2xl border border-gray-100 p-6 shadow-sm md:grid-cols-[300px_minmax(0,1fr)] md:p-8 ${index % 2 ? 'md:[&>figure]:order-2' : ''}`}
               >
-                <div className="h-40 bg-gray-100 relative">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = `https://placehold.co/400x300/f1f5f9/64748b?text=${category.name}`;
-                    }}
+                {product.studio ? (
+                  <GarmentShowcase
+                    product={product.id}
+                    colors={['#171717', '#172554', '#b91c1c', '#166534']}
+                    interval={0}
+                    label={`${product.name} — ${product.blank}`}
                   />
-                  <div className="absolute top-3 left-3 bg-white rounded-full p-2 shadow-sm">
-                    <category.icon className="w-5 h-5 text-primary" />
+                ) : (
+                  <figure className="grid aspect-[4/5] place-items-center rounded-2xl bg-gray-50 text-6xl" aria-hidden="true">
+                    🧢
+                  </figure>
+                )}
+
+                <div>
+                  <h2 className="text-2xl font-bold">{product.name}</h2>
+                  <p className="text-sm text-gray-500">{product.blank}</p>
+                  <p className="mt-3 text-gray-600">{product.summary}</p>
+
+                  <ul className="mt-4 space-y-2">
+                    {product.specs.map((spec) => (
+                      <li key={spec} className="flex items-start gap-2 text-sm text-gray-700">
+                        <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                        {spec}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-6 flex flex-wrap items-center gap-4">
+                    <p className="text-xl font-bold text-gray-900">
+                      From {money.format(product.from)}
+                      <span className="text-base font-normal text-gray-500"> / piece</span>
+                    </p>
+                    {product.studio ? (
+                      <Link
+                        to="/design-studio"
+                        className="group inline-flex items-center gap-2 text-sm font-semibold text-primary"
+                      >
+                        <Palette className="h-4 w-4" />
+                        Mock it up
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </Link>
+                    ) : (
+                      <Link to="/contact" className="text-sm font-semibold text-primary">
+                        Ask us for a mockup
+                      </Link>
+                    )}
                   </div>
                 </div>
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-base font-semibold mb-1">{category.name}</h3>
-                  <p className="text-gray-600 text-sm mb-3 flex-1">{category.description}</p>
-                  <Link to={category.link} className="text-primary font-medium text-sm hover:underline">
-                    View options →
-                  </Link>
-                </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Printing methods */}
-      <section className="py-16 bg-gray-50">
+      <section className="bg-gray-50 py-14">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">Printing Methods</h2>
-          <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">
-            We offer various printing techniques to ensure your design looks its best
+          <h2 className="text-center text-3xl font-bold">How we decorate</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-gray-600">
+            We pick the method that suits your artwork and quantity, and tell you why.
           </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {printingMethods.map((method) => (
-              <div 
-                key={method.name}
-                className="bg-white rounded-2xl p-6 shadow-sm"
-              >
-                <h3 className="text-xl font-semibold mb-3">{method.name}</h3>
-                <p className="text-gray-600 mb-4">{method.description}</p>
-                <div className="flex items-center mb-2">
-                  <BadgeDollarSign className="w-5 h-5 text-primary mr-2" />
-                  <span className="text-sm font-medium">Min: {method.minQuantity}</span>
-                </div>
-                <div className="text-sm text-gray-500">
-                  Best for: {method.bestFor}
-                </div>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {DECORATION_METHODS.map((method) => (
+              <div key={method.name} className="rounded-2xl bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-semibold">{method.name}</h3>
+                <p className="mt-1 text-sm font-medium text-primary">Best for: {method.best}</p>
+                <p className="mt-3 text-sm text-gray-600">{method.detail}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="bg-primary/10 rounded-2xl p-8 md:p-12 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to bring your ideas to life?</h2>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              Whether you have a design ready to go or need help creating something unique,
-              our team is here to guide you through the process.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link 
-                to="/design-studio" 
-                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Visit Design Studio
-              </Link>
-              <Link 
-                to="/contact" 
-                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                Contact Us
-              </Link>
-            </div>
+      <section className="py-14">
+        <div className="container mx-auto max-w-3xl px-4 text-center">
+          <h2 className="text-3xl font-bold">Stock colours</h2>
+          <p className="mt-3 text-gray-600">
+            These are the shades you can preview in the Design Studio. Other colourways are usually
+            available from the mill — ask and we&apos;ll check stock.
+          </p>
+          <ul className="mt-8 flex flex-wrap justify-center gap-6">
+            {GARMENT_COLORS.map((color) => (
+              <li key={color.slug} className="w-20">
+                <span
+                  className="mx-auto block h-14 w-14 rounded-full border border-gray-200 shadow-inner"
+                  style={{ backgroundColor: color.value }}
+                />
+                <span className="mt-2 block text-xs text-gray-600">{color.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="bg-gray-900 py-14 text-white">
+        <div className="container mx-auto max-w-2xl px-4 text-center">
+          <h2 className="text-3xl font-bold">Ready for a real number?</h2>
+          <p className="mt-3 text-gray-300">
+            Send us quantity, sizes, and artwork and we&apos;ll come back with firm pricing and a
+            date — usually within one business day.
+          </p>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link to="/contact" className="rounded-lg bg-primary px-7 py-3.5 font-semibold text-white hover:bg-primary/90">
+              Get a quote
+            </Link>
+            <Link to="/design-studio" className="rounded-lg border-2 border-white/20 bg-white/10 px-7 py-3.5 font-semibold text-white hover:bg-white/20">
+              Build a mockup first
+            </Link>
           </div>
         </div>
       </section>

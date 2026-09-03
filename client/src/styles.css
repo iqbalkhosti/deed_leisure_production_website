@@ -2,19 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --max: 1200px;
-  --pad: 16px;
-}
+/**
+ * Everything below is design tokens and base element defaults. Component
+ * styling is Tailwind classes in the JSX.
+ *
+ * Nothing may be added after `@tailwind utilities` at plain-class or element
+ * specificity: those rules win on source order and silently override the
+ * utilities used throughout the app. A stale `.grid { gap: 16px }` and a bare
+ * `input, button, select { padding: 10px }` used to live here and were pinning
+ * every grid gap and form control on the site. If you need an escape hatch,
+ * put it inside `@layer components` or `@layer utilities` so Tailwind can order
+ * it correctly.
+ */
 
 @layer base {
-  body {
-    @apply font-sans text-gray-900 bg-gray-50;
-  }
-  
-  a {
-    @apply text-inherit;
-  }
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
@@ -35,209 +36,38 @@
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+
+  body {
+    @apply bg-white font-sans text-gray-900;
+  }
+
+  a {
+    @apply text-inherit;
+  }
+
+  /* Form controls inherit the page font; size and colour come from utilities. */
+  input,
+  button,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  /* Anchored jumps and in-page scrolling should clear the sticky navbar. */
+  :target {
+    scroll-margin-top: 6rem;
   }
 }
-nav{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;z-index:10}
-nav .row{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:12px 0}
-nav a{text-decoration:none;padding:8px 10px;border-radius:8px}
-nav a.active, nav a:hover:not(.btn){background:#111;color:#fff}
-.nav-links{display:flex;justify-content:space-between;align-items:center;width:100%}
-.main-links{display:flex;gap:8px}
-.action-links{display:flex;gap:12px}
-.btn-studio{background:#444;margin-right:8px}
-footer{border-top:1px solid #eee;margin-top:40px;padding:24px 0;color:#555}
-.grid{display:grid;gap:16px}
-.gallery{grid-template-columns:repeat(3,minmax(0,1fr))}
 
-/* Hero slider styles */
-.hero-container {
-  width: 100%;
-  height: 66vh;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 40px;
-}
-
-.hero-slider {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.hero-slide {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 1s ease-in-out;
-  z-index: 1;
-}
-
-.hero-slide.active {
-  opacity: 1;
-  z-index: 2;
-}
-
-.hero-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: white;
-  z-index: 3;
-  width: 80%;
-  max-width: 800px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-.hero-content h1 {
-  font-size: 46px;
-  margin: 0 0 12px;
-}
-
-.hero-content p {
-  font-size: 18px;
-  margin-bottom: 24px;
-}
-
-.slider-nav {
-  position: absolute;
-  bottom: 20px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  z-index: 3;
-}
-
-.nav-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.5);
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-.nav-dot.active {
-  background: white;
-}
-.btn{display:inline-block;background:#111;color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none}
-.card{background:#fff;border:1px solid #eee;border-radius:12px;padding:16px}
-input,button,select{font:inherit;padding:10px;border:1px solid #ddd;border-radius:10px}
-label{display:block;margin:8px 0 6px}
-#designer{display:flex;gap:16px;flex-wrap:wrap}
-.preview{width:260px;height:320px;background:#f1f1f1;border-radius:16px;display:flex;align-items:center;justify-content:center;position:relative;border:1px dashed #ccc}
-.preview svg{position:absolute;inset:0}
-.preview img{max-width:70%;max-height:70%;object-fit:contain;opacity:0.9}
-
-/* Design Studio Styles */
-.design-studio-container {
-  display: flex;
-  gap: 32px;
-  flex-wrap: wrap;
-  margin-top: 32px;
-}
-
-.design-options {
-  flex: 1 1 320px;
-  padding: 24px;
-}
-
-.product-preview {
-  flex: 1 1 400px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.product {
-  width: 300px;
-  height: 360px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.option-group {
-  margin-bottom: 20px;
-}
-
-.hint {
-  color: #666;
-  font-size: 14px;
-  margin-top: 4px;
-}
-
-.color-options {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.color-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid #eee;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.color-btn:hover {
-  transform: scale(1.1);
-}
-
-.color-btn.active {
-  border: 2px solid #111;
-  transform: scale(1.1);
-}
-
-.btn-primary {
-  background: #3b82f6;
-  margin-top: 16px;
-  width: 100%;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

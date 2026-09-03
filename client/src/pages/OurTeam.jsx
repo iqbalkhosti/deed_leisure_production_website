@@ -2,8 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Linkedin } from 'lucide-react';
 import ChatBot from '../components/ChatBot';
+import useSeo from '../hooks/useSeo';
+import { mailtoQuote } from '../data/site';
 
 export default function OurTeam() {
+  useSeo({
+    title: 'About us',
+    description: 'The people behind Deed Leisure — a small custom apparel shop serving clubs, teams, and businesses in Durham Region and the GTA.',
+    path: '/our-team',
+  });
+
   // Sample team members data
   const teamMembers = [
     {
@@ -166,12 +174,12 @@ export default function OurTeam() {
               <p className="text-lg text-gray-600 mb-8">
                 We're always looking for talented individuals who are passionate about design, apparel, and creating exceptional customer experiences.
               </p>
-              <Link 
-                to="/careers" 
+              <a
+                href={mailtoQuote('Working with Deed Leisure')}
                 className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
               >
-                View Open Positions
-              </Link>
+                Send us your portfolio
+              </a>
             </div>
           </div>
         </div>

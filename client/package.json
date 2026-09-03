@@ -1,5 +1,5 @@
 {
-  "name": "apparel-web",
+  "name": "deed-leisure-web",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -7,34 +7,21 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 5173",
-    "lint": "echo 'No linter configured'"
+    "lint": "echo 'No linter configured'",
+    "prebuild": "node scripts/generate-sitemap.mjs"
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.9",
-    "@react-three/drei": "^9.122.0",
-    "@react-three/fiber": "^8.17.10",
-    "@stripe/stripe-js": "^3.4.1",
-    "@supabase/supabase-js": "^2.45.4",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "framer-motion": "^12.34.4",
     "lucide-react": "^0.546.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
-    "tailwind-merge": "^3.5.0",
-    "tailwindcss-animate": "^1.0.7",
-    "three": "^0.183.1"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@types/node": "^25.3.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.9.3",
     "vite": "^5.4.10"
   }
 }

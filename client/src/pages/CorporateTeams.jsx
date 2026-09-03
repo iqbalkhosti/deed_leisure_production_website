@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Briefcase, Shield, TrendingUp, Users, Award, Zap } from 'lucide-react';
 import ChatBot from '../components/ChatBot';
+import QuoteForm from '../components/QuoteForm';
+import useSeo from '../hooks/useSeo';
 
 export default function CorporateTeams() {
-  const [formData, setFormData] = useState({
-    name: '',
-    company: '',
-    email: '',
-    phone: '',
-    quantity: '',
-    needs: ''
+  useSeo({
+    title: 'Custom apparel for corporate teams',
+    description: 'Branded staff kits, conference merch, and bulk pricing with invoicing your finance team will accept.',
+    path: '/corporate-teams',
   });
-  const [formSubmitted, setFormSubmitted] = useState(false);
+
 
   const benefits = [
     {
@@ -36,25 +35,6 @@ export default function CorporateTeams() {
       description: 'Dedicated support for repeat orders and campaigns'
     }
   ];
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setFormSubmitted(true);
-    setFormData({
-      name: '',
-      company: '',
-      email: '',
-      phone: '',
-      quantity: '',
-      needs: ''
-    });
-    setTimeout(() => setFormSubmitted(false), 5000);
-  };
 
   return (
     <div className="min-h-screen">
@@ -189,117 +169,13 @@ export default function CorporateTeams() {
           <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm p-8">
             <h2 className="text-3xl font-bold text-center mb-8">Request Enterprise Quote</h2>
             
-            {formSubmitted && (
-              <div className="bg-green-50 text-green-700 p-4 rounded-lg mb-6">
-                <p className="font-medium">Thank you! Our enterprise team will contact you within 1 business day.</p>
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-gray-700 font-medium mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="company" className="block text-gray-700 font-medium mb-2">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    id="company"
-                    name="company"
-                    value={formData.company}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
-                    Business Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="phone" className="block text-gray-700 font-medium mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="quantity" className="block text-gray-700 font-medium mb-2">
-                    Order Size
-                  </label>
-                  <select
-                    id="quantity"
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    required
-                  >
-                    <option value="">Select order size</option>
-                    <option value="50-100">50-100 items</option>
-                    <option value="100-250">100-250 items</option>
-                    <option value="250-500">250-500 items</option>
-                    <option value="500+">500+ items</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="needs" className="block text-gray-700 font-medium mb-2">
-                    Project Details
-                  </label>
-                  <textarea
-                    id="needs"
-                    name="needs"
-                    value={formData.needs}
-                    onChange={handleInputChange}
-                    rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Tell us about your needs, timeline, and any specific requirements..."
-                  ></textarea>
-                </div>
-                
-                <button
-                  type="submit"
-                  className="w-full px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Submit Enterprise Request
-                </button>
-              </div>
-            </form>
+            <QuoteForm
+              source="Corporate teams"
+              organizationLabel="Company name"
+              messageLabel="What do you need?"
+              messagePlaceholder="Staff kits, event merch, brand colours to match, and your deadline."
+              submitLabel="Request corporate pricing"
+            />
           </div>
         </div>
       </section>

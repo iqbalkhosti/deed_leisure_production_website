@@ -1,16 +1,26 @@
-# Design Studio mockup assets
+# Design Studio mockup photos
 
-Use a front and back JPG for each product and colour at these paths:
+One front and one back JPG per product:
 
 ```
-/mockups/gildan-64000/black/front.jpg
-/mockups/gildan-64000/black/back.jpg
-/mockups/hoodie/navy/front.jpg
-/mockups/hoodie/navy/back.jpg
-/mockups/polo/white/front.jpg
-/mockups/polo/white/back.jpg
-/mockups/tote/forest/front.jpg
-/mockups/tote/forest/back.jpg
+gildan-64000/front.jpg   gildan-64000/back.jpg
+hoodie/front.jpg         hoodie/back.jpg
+polo/front.jpg           polo/back.jpg
 ```
 
-White front and back views for the Gildan 64000 T-shirt, Gildan Heavy Blend 18500 hoodie, and M&O 7002 piqué polo are already provided at their base paths. They act as the fallback for every colour and are colour-tinted in the preview. Colour-specific images at the paths above take priority automatically. The studio falls back to an illustrated garment until a product photo is placed at the matching path.
+**There are no per-colour folders.** Colours are rendered from these photos at
+runtime, so adding a colour costs nothing — see "How garment colours work" in
+the root README.
+
+For the masking to work, a photo needs:
+
+- a **pure white** background (255, 255, 255) reaching every frame edge,
+- a **white or very light** garment, so tinting has its full range,
+- a visible edge between garment and backdrop. A blown-out hem that merges into
+  the background gets cut slightly short.
+
+Around 1000×1250 keeps the mask build fast and the export sharp.
+
+To add a product: drop the two files in a new folder here, add the product to
+`client/src/data/catalog.js`, and map its id to this folder in `PRODUCT_ASSETS`
+in `client/src/components/MockupCanvas.jsx`.

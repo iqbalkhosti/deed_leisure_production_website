@@ -12,7 +12,6 @@ build/
 .env
 .env.local
 .env.*.local
-server/.env
 client/.env
 
 # OS / Editor
@@ -29,6 +28,12 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Generated at build time by client/scripts/generate-sitemap.mjs
+client/public/sitemap.xml
+
+# Vercel
+.vercel
 
 # Misc
 *.local

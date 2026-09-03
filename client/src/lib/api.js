@@ -1,99 +1,51 @@
-import supabase from './supabase.js';
-
-const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:4242').replace(/\/$/, '');
-
 /**
- * Fetch wrapper that automatically attaches the current Supabase JWT.
- * Falls back to unauthenticated request if no session exists.
+ * Form submission against the Vercel serverless functions in /api.
+ *
+ * Both endpoints are same-origin, so there is nothing to configure for local
+ * `vercel dev` or production. When email delivery is not configured yet the
+ * server answers 503 with `fallback: 'mailto'`, and the caller offers the
+ * visitor a plain mailto link instead of losing the enquiry.
  */
-export async function apiFetch(path, options = {}) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
 
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers ?? {}),
-  };
+export class ApiError extends Error {
+  constructor(message, { status, fallback } = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.fallback = fallback;
+  }
+}
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
-  const json = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(json.error ?? `API error ${res.status}`);
+async function post(path, payload) {
+  let response;
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new ApiError('We could not reach our servers. Check your connection and try again.', {
+      fallback: 'mailto',
+    });
   }
 
-  return json;
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new ApiError(body.error ?? `Request failed (${response.status})`, {
+      status: response.status,
+      fallback: body.fallback,
+    });
+  }
+  return body;
 }
 
-// ─── Checkout ─────────────────────────────────────────────────────────────────
-export function createCheckoutSession(payload) {
-  return apiFetch('/checkout', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-// ─── Admin: refund ────────────────────────────────────────────────────────────
-export function refundOrder(order_id, refund_type = 'full', amount_cents) {
-  return apiFetch('/admin/refund', {
-    method: 'POST',
-    body: JSON.stringify({ order_id, refund_type, amount_cents }),
-  });
-}
-
-// ─── Admin: analytics ─────────────────────────────────────────────────────────
-export function fetchAnalytics() {
-  return apiFetch('/admin/analytics');
-}
-
-// ─── Admin: delete user ───────────────────────────────────────────────────────
-export function deleteUser(user_id) {
-  return apiFetch('/admin/delete-user', {
-    method: 'DELETE',
-    body: JSON.stringify({ user_id }),
-  });
-}
-
-// ─── Admin: Stripe Connect ────────────────────────────────────────────────────
-export function createConnectedAccount(club_id, email) {
-  return apiFetch('/admin/connect/create', {
-    method: 'POST',
-    body: JSON.stringify({ club_id, email }),
-  });
-}
-
-export function getOnboardingLink(club_id) {
-  return apiFetch(`/admin/connect/onboard-link/${club_id}`);
-}
-
-// ─── Discount codes ───────────────────────────────────────────────────────────
-export function validateDiscount(code, listing_id, quantity) {
-  return apiFetch('/discount/validate', {
-    method: 'POST',
-    body: JSON.stringify({ code, listing_id, quantity }),
-  });
-}
-
-export function listDiscountCodes() {
-  return apiFetch('/admin/discount-codes');
-}
-
-export function createDiscountCode(payload) {
-  return apiFetch('/admin/discount-codes', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export function deleteDiscountCode(id) {
-  return apiFetch(`/admin/discount-codes/${id}`, { method: 'DELETE' });
-}
-
-// ─── Public: Design Studio mockup request ────────────────────────────────────
+/** Send a Design Studio mockup, with the rendered PNG attached. */
 export function submitDesignRequest(payload) {
-  return apiFetch('/design-requests', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+  return post('/api/design-request', payload);
+}
+
+/** Send a general enquiry from the contact page. */
+export function submitContactRequest(payload) {
+  return post('/api/contact', payload);
 }

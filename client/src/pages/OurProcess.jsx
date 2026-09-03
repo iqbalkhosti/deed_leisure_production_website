@@ -1,9 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import useSeo from '../hooks/useSeo';
 import { MessageSquare, Palette, CheckCircle, Package, Clock, BarChart } from 'lucide-react';
 import ChatBot from '../components/ChatBot';
 
 export default function OurProcess() {
+  useSeo({
+    title: 'How it works',
+    description: 'From first conversation to delivered boxes: how a custom apparel order runs at Deed Leisure, and what we need from you at each step.',
+    path: '/our-process',
+  });
+
   // Process steps
   const processSteps = [
     {

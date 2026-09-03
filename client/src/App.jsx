@@ -1,46 +1,48 @@
-import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { Routes, Route, Outlet, useLocation } from 'react-router-dom';
 
-import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
-
-// ─── Layout components ────────────────────────────────────────────────────────
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-// ─── Eagerly-loaded pages ─────────────────────────────────────────────────────
-import Home             from './pages/Home';
-import Products         from './pages/Products';
-import OurTeam          from './pages/OurTeam';
-import OurProcess       from './pages/OurProcess';
+import Home from './pages/Home';
+import Products from './pages/Products';
+import OurTeam from './pages/OurTeam';
+import OurProcess from './pages/OurProcess';
 import OntarioTechClubs from './pages/OntarioTechClubs';
-import StudentClubs     from './pages/StudentClubs';
-import CorporateTeams   from './pages/CorporateTeams';
-import Contact          from './pages/Contact';
-import NotFound         from './pages/NotFound';
+import StudentClubs from './pages/StudentClubs';
+import CorporateTeams from './pages/CorporateTeams';
+import Contact from './pages/Contact';
+import Faq from './pages/Faq';
+import NotFound from './pages/NotFound';
 
-// ─── Lazy-loaded pages ────────────────────────────────────────────────────────
-const DesignStudio    = lazy(() => import('./pages/DesignStudio'));
-const AdminLogin      = lazy(() => import('./pages/AdminLogin'));
-const AdminDashboard  = lazy(() => import('./pages/AdminDashboard'));
-const ListingDetail   = lazy(() => import('./pages/ListingDetail'));
-const ClubDashboard   = lazy(() => import('./pages/ClubDashboard'));
-const Listings        = lazy(() => import('./pages/Listings'));
-const Login           = lazy(() => import('./pages/Login'));
+// The studio pulls in the recolouring engine and canvas work — worth splitting
+// out so the marketing pages stay light.
+const DesignStudio = lazy(() => import('./pages/DesignStudio'));
 
-// ─── Loading fallbacks ────────────────────────────────────────────────────────
-const DarkFallback  = <div className="min-h-screen bg-gray-950" />;
-const LightFallback = (
-  <div className="min-h-screen flex items-center justify-center text-gray-500">
-    Loading…
-  </div>
+const Fallback = (
+  <div className="flex min-h-screen items-center justify-center text-gray-500">Loading…</div>
 );
 
-// ─── Public layout ────────────────────────────────────────────────────────────
+/** Browsers restore scroll on history navigation; a new route should start at the top. */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+}
+
 function PublicLayout() {
   return (
     <>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow-lg"
+      >
+        Skip to content
+      </a>
       <Navbar />
-      <main>
+      <main id="main">
         <Outlet />
       </main>
       <Footer />
@@ -48,103 +50,30 @@ function PublicLayout() {
   );
 }
 
-// ─── Protected route wrapper ──────────────────────────────────────────────────
-// Redirects unauthenticated users to /admin/login.
-// Optionally checks for a required role.
-function ProtectedRoute({ requiredRole, redirectTo = '/admin/login', children }) {
-  const { user, userRole, loading } = useAuth();
-
-  if (loading) return DarkFallback;
-  if (!user) return <Navigate to={redirectTo} replace />;
-  if (requiredRole && userRole !== requiredRole) return <Navigate to="/" replace />;
-
-  return children;
-}
-
-// ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   return (
-    <AuthProvider>
+    <>
+      <ScrollToTop />
       <Routes>
-        {/* ── Auth pages — no Navbar/Footer ── */}
+        {/* The studio is a full-screen tool with its own header. */}
         <Route
-          path="/login"
-          element={
-            <Suspense fallback={LightFallback}>
-              <Login />
-            </Suspense>
-          }
+          path="/design-studio"
+          element={<Suspense fallback={Fallback}><DesignStudio /></Suspense>}
         />
 
-        {/* ── Admin pages — no Navbar/Footer ── */}
-        <Route
-          path="/admin/login"
-          element={
-            <Suspense fallback={DarkFallback}>
-              <AdminLogin />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <Suspense fallback={DarkFallback}>
-                <AdminDashboard />
-              </Suspense>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ── Club exec dashboard ── */}
-        <Route
-          path="/club"
-          element={
-            <ProtectedRoute requiredRole="club_exec">
-              <Suspense fallback={LightFallback}>
-                <ClubDashboard />
-              </Suspense>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ── Public pages — wrapped in Navbar/Footer ── */}
         <Route element={<PublicLayout />}>
-          <Route path="/"                    element={<Home />} />
-          <Route path="/products"            element={<Products />} />
-          <Route path="/our-team"            element={<OurTeam />} />
-          <Route path="/our-process"         element={<OurProcess />} />
-          <Route
-            path="/design-studio"
-            element={
-              <Suspense fallback={LightFallback}>
-                <DesignStudio />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/listings"
-            element={
-              <Suspense fallback={LightFallback}>
-                <Listings />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/listings/:id"
-            element={
-              <Suspense fallback={LightFallback}>
-                <ListingDetail />
-              </Suspense>
-            }
-          />
-          <Route path="/student-clubs"       element={<StudentClubs />} />
-          <Route path="/corporate-teams"     element={<CorporateTeams />} />
-          <Route path="/ontario-tech-clubs"  element={<OntarioTechClubs />} />
-          <Route path="/contact"             element={<Contact />} />
-          <Route path="*"                    element={<NotFound />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/our-process" element={<OurProcess />} />
+          <Route path="/our-team" element={<OurTeam />} />
+          <Route path="/faq" element={<Faq />} />
+          <Route path="/student-clubs" element={<StudentClubs />} />
+          <Route path="/corporate-teams" element={<CorporateTeams />} />
+          <Route path="/ontario-tech-clubs" element={<OntarioTechClubs />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
-    </AuthProvider>
+    </>
   );
 }

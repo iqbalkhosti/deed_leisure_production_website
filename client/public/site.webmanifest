@@ -1,0 +1,10 @@
+{
+  "name": "Deed Leisure",
+  "short_name": "Deed Leisure",
+  "description": "Custom apparel for clubs, teams, and small businesses.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111827",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

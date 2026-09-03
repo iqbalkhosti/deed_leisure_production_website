@@ -1,8 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import useSeo from '../hooks/useSeo';
 import { Home, Search } from 'lucide-react';
 
 export default function NotFound() {
+  useSeo({
+    title: 'Page not found',
+    description: 'That page does not exist. Head back to the home page or get in touch.',
+    path: '/404',
+  });
+
   return (
     <div className="min-h-screen flex items-center justify-center py-16">
       <div className="container mx-auto px-4">

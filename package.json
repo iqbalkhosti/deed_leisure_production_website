@@ -1,0 +1,14 @@
+{
+  "name": "deed-leisure-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Marketing site and Design Studio for Deed Leisure. The React app lives in client/; api/ holds the Vercel serverless functions.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "preview": "npm --prefix client run preview",
+    "install:client": "npm --prefix client install"
+  }
+}
