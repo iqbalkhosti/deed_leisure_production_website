@@ -68,6 +68,7 @@ export default async function handler(req, res) {
     return res.status(502).json({
       error: 'We could not send your request just now. Please try again in a moment.',
       fallback: 'mailto',
+      diagnostic: error.upstream ?? { message: String(error.message).slice(0, 200) },
     });
   }
 

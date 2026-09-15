@@ -103,7 +103,20 @@ export async function sendMail({ subject, replyTo, rows, intro, attachments = []
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    throw new Error(`Resend responded ${response.status}: ${detail.slice(0, 500)}`);
+    let parsed = {};
+    try { parsed = JSON.parse(detail); } catch { /* non-JSON body */ }
+    const error = new Error(`Resend responded ${response.status}: ${detail.slice(0, 500)}`);
+    // Carried through to the API response. Whoever runs this site needs to be
+    // able to tell "key is wrong" from "domain is not verified" without
+    // hunting through platform logs; the provider's own wording is the only
+    // thing that distinguishes them, and it describes configuration rather
+    // than anything secret.
+    error.upstream = {
+      status: response.status,
+      code: parsed.name ?? null,
+      message: String(parsed.message ?? detail).slice(0, 200) || null,
+    };
+    throw error;
   }
   return response.json();
 }
