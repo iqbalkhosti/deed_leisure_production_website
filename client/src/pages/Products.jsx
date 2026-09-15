@@ -7,14 +7,10 @@ import useSeo from '../hooks/useSeo';
 import site from '../data/site';
 import { PRODUCTS, DECORATION_METHODS, GARMENT_COLORS } from '../data/catalog';
 
-const money = new Intl.NumberFormat('en-CA', {
-  style: 'currency', currency: 'CAD', maximumFractionDigits: 0,
-});
-
 export default function Products() {
   useSeo({
-    title: 'Products & pricing',
-    description: `T-shirts, hoodies, polos, hats, and bags with screen printing, DTF, and embroidery. Starting prices, fabrics, and minimums from ${site.name}.`,
+    title: 'Products',
+    description: `T-shirts, hoodies, polos, hats, and bags with screen printing, DTF, and embroidery. Fabrics, decoration methods, and colours from ${site.name}.`,
     path: '/products',
   });
 
@@ -22,11 +18,11 @@ export default function Products() {
     <div className="min-h-screen bg-white">
       <section className="border-b border-gray-100 bg-blue-50 py-14">
         <div className="container mx-auto max-w-3xl px-4 text-center">
-          <h1 className="text-3xl font-bold md:text-4xl">Products &amp; pricing</h1>
+          <h1 className="text-3xl font-bold md:text-4xl">Our products</h1>
           <p className="mt-3 text-lg text-gray-600">
-            Prices below are per piece at the {site.minimumOrder}-piece minimum with one decoration
-            location, in Canadian dollars. Bigger runs and simpler artwork bring them down — we
-            confirm every quote before anything is printed.
+            There is no minimum order — one piece or five hundred. Cost depends on quantity,
+            decoration method, and how many colours your artwork uses, so tell us what you have
+            in mind and we&apos;ll come back with a firm number.
           </p>
         </div>
       </section>
@@ -67,10 +63,9 @@ export default function Products() {
                   </ul>
 
                   <div className="mt-6 flex flex-wrap items-center gap-4">
-                    <p className="text-xl font-bold text-gray-900">
-                      From {money.format(product.from)}
-                      <span className="text-base font-normal text-gray-500"> / piece</span>
-                    </p>
+                    <Link to="/contact" className="text-lg font-bold text-primary hover:underline">
+                      Reach out for pricing
+                    </Link>
                     {product.studio ? (
                       <Link
                         to="/design-studio"
@@ -134,10 +129,10 @@ export default function Products() {
 
       <section className="bg-gray-900 py-14 text-white">
         <div className="container mx-auto max-w-2xl px-4 text-center">
-          <h2 className="text-3xl font-bold">Ready for a real number?</h2>
+          <h2 className="text-3xl font-bold">Ready for a price?</h2>
           <p className="mt-3 text-gray-300">
             Send us quantity, sizes, and artwork and we&apos;ll come back with firm pricing and a
-            date — usually within one business day.
+            date — usually within one business day. No minimum order.
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
             <Link to="/contact" className="rounded-lg bg-primary px-7 py-3.5 font-semibold text-white hover:bg-primary/90">

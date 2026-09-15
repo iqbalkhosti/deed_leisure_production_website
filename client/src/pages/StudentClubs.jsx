@@ -4,12 +4,11 @@ import { Users, BadgeDollarSign, Clock, Sparkles, Calendar, CheckCircle } from '
 import ChatBot from '../components/ChatBot';
 import QuoteForm from '../components/QuoteForm';
 import useSeo from '../hooks/useSeo';
-import site from '../data/site';
 
 export default function StudentClubs() {
   useSeo({
     title: 'Custom apparel for student clubs',
-    description: 'Club pricing, small minimums, and turnaround that fits a semester. Custom tees, hoodies, and polos for student organizations.',
+    description: 'Club pricing, no minimum order, and turnaround that fits a semester. Custom tees, hoodies, and polos for student organizations.',
     path: '/student-clubs',
   });
 
@@ -32,8 +31,8 @@ export default function StudentClubs() {
     },
     {
       icon: CheckCircle,
-      title: 'Low Minimums',
-      description: `Start at ${site.minimumOrder} pieces — sized for a small exec team, not a warehouse`
+      title: 'No Minimums',
+      description: 'Order one piece or a hundred — whatever your club actually needs'
     }
   ];
 

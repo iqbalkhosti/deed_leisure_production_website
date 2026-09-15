@@ -14,16 +14,15 @@ export const GARMENT_COLORS = [
 ];
 
 /**
- * `from` is the per-piece starting price in CAD at the minimum order quantity,
- * one decoration location. Every quote is confirmed by us — these are here so
- * visitors can sanity-check their budget before getting in touch.
+ * No prices here on purpose. Cost depends on quantity, decoration method, and
+ * colour count, so a published figure would be wrong more often than right —
+ * every product points people at a quote instead.
  */
 export const PRODUCTS = [
   {
     id: 'tshirt',
     name: 'T-Shirt',
     blank: 'Gildan Softstyle 64000',
-    from: 18,
     summary: 'Ring-spun cotton with a soft hand feel. The default for club merch and events.',
     specs: ['100% ring-spun cotton, 4.5 oz', 'Unisex XS–3XL', 'Screen print, DTF, or embroidery'],
     studio: true,
@@ -32,7 +31,6 @@ export const PRODUCTS = [
     id: 'hoodie',
     name: 'Hoodie',
     blank: 'Gildan Heavy Blend 18500',
-    from: 42,
     summary: 'Heavyweight fleece that holds a bold print. The piece people actually keep wearing.',
     specs: ['50/50 cotton-poly, 8.0 oz', 'Unisex S–3XL', 'Screen print, DTF, or embroidery'],
     studio: true,
@@ -41,7 +39,6 @@ export const PRODUCTS = [
     id: 'polo',
     name: 'Polo',
     blank: 'M&O Ring-Spun Piqué 7002',
-    from: 32,
     summary: 'Structured piqué for exec teams, conference staff, and anything semi-formal.',
     specs: ['100% ring-spun cotton piqué', 'Unisex S–2XL', 'Embroidery recommended'],
     studio: true,
@@ -50,7 +47,6 @@ export const PRODUCTS = [
     id: 'headwear',
     name: 'Hats & bags',
     blank: 'Caps, beanies, totes, duffels',
-    from: 24,
     summary: 'Curved and structured items we mock up with you, since seams affect placement.',
     specs: ['Structured and unstructured caps', 'Cotton totes and duffels', 'Embroidery or heat transfer'],
     studio: false,

@@ -1,7 +1,7 @@
 [
   {
-    "question": "What are your minimum order quantities?",
-    "answer": "Our minimum order is 12 pieces for standard items. For custom dye sublimation or all-over prints, we require a minimum of 24 pieces. Bulk discounts start at 50+ items."
+    "question": "Is there a minimum order quantity?",
+    "answer": "No. We'll print a single piece or several hundred. Larger runs bring the per-piece cost down, and we'll tell you where those breakpoints fall when we quote you."
   },
   {
     "question": "How long does production take?",
@@ -24,7 +24,7 @@
   },
   {
     "question": "What is your pricing structure?",
-    "answer": "Pricing depends on quantity, garment type, print method, and design complexity. T-shirts typically range from $15-25 per piece for orders of 24+ items. Contact us for a custom quote."
+    "answer": "Pricing depends on quantity, garment, decoration method, and how many colours your artwork uses, so we quote every job individually rather than publish a list. Send us the details and you'll have a firm number, usually within one business day."
   },
   {
     "question": "Do you offer samples before full production?",

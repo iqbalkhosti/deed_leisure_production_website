@@ -9,7 +9,7 @@ import faq from '../data/faq.json';
 export default function Faq() {
   useSeo({
     title: 'Frequently asked questions',
-    description: `Minimums, turnaround, fabrics, artwork formats, and pricing for custom apparel from ${site.name}.`,
+    description: `Turnaround, fabrics, artwork formats, and pricing for custom apparel from ${site.name}.`,
     path: '/faq',
   });
 
@@ -19,7 +19,7 @@ export default function Faq() {
         <div className="container mx-auto max-w-3xl px-4 text-center">
           <h1 className="text-3xl font-bold md:text-4xl">Frequently asked questions</h1>
           <p className="mt-3 text-lg text-gray-600">
-            Minimums, timelines, fabrics, and artwork — the things people ask before they order.
+            Timelines, fabrics, artwork, and pricing — the things people ask before they order.
           </p>
         </div>
       </section>

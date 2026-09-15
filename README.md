@@ -141,11 +141,13 @@ Roughly 1000×1250 keeps the mask build fast and the export sharp.
 Almost everything a small business needs to edit lives in two files:
 
 - `client/src/data/site.js` — name, email, phone, address, hours, socials,
-  minimum order, turnaround. Leave `phone` blank and it is hidden everywhere.
+  turnaround. Leave `phone` blank and it is hidden everywhere.
 - `client/src/data/catalog.js` — products, starting prices, fabrics, colours,
   decoration methods.
 
-Prices are rendered through `Intl.NumberFormat` in CAD.
+The catalogue carries no prices: cost depends on quantity, decoration method,
+and colour count, so every product links to a quote instead. There is no
+minimum order quantity.
 
 ---
 

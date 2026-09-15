@@ -12,7 +12,7 @@ import { submitContactRequest, ApiError } from '../lib/api';
  * which page the enquiry came from.
  */
 
-const QUANTITY_OPTIONS = ['12–24', '25–49', '50–99', '100–249', '250+'];
+const QUANTITY_OPTIONS = ['1–11', '12–24', '25–49', '50–99', '100–249', '250+'];
 
 const inputClass = 'w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 const labelClass = 'mb-2 block font-medium text-gray-700';

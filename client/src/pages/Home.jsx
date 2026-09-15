@@ -16,7 +16,7 @@ const AUDIENCES = [
     to: '/student-clubs',
     icon: Users,
     title: 'Student clubs',
-    detail: 'Club pricing, small minimums, and turnaround that fits a semester.',
+    detail: 'Club pricing, no minimum order, and turnaround that fits a semester.',
   },
   {
     to: '/corporate-teams',
@@ -31,10 +31,6 @@ const AUDIENCES = [
     detail: 'We work with societies on campus and know how their approval process runs.',
   },
 ];
-
-const money = new Intl.NumberFormat('en-CA', {
-  style: 'currency', currency: 'CAD', maximumFractionDigits: 0,
-});
 
 export default function Home() {
   useSeo({
@@ -53,8 +49,8 @@ export default function Home() {
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-bold md:text-4xl">What we print</h2>
             <p className="mx-auto mt-3 max-w-2xl text-lg text-gray-600">
-              Four staples, decorated however the artwork calls for it. Prices start
-              at the {site.minimumOrder}-piece minimum for one location.
+              Four staples, decorated however the artwork calls for it. No minimum
+              order — tell us what you need and we&apos;ll price it.
             </p>
           </div>
 
@@ -76,17 +72,16 @@ export default function Home() {
                 <h3 className="mt-4 text-lg font-semibold">{product.name}</h3>
                 <p className="text-sm text-gray-500">{product.blank}</p>
                 <p className="mt-2 text-sm text-gray-600">{product.summary}</p>
-                <p className="mt-3 font-semibold text-gray-900">
-                  From {money.format(product.from)}
-                  <span className="font-normal text-gray-500"> / piece</span>
-                </p>
+                <Link to="/contact" className="mt-3 inline-block font-semibold text-primary hover:underline">
+                  Reach out for pricing
+                </Link>
               </article>
             ))}
           </div>
 
           <div className="mt-10 text-center">
             <Link to="/products" className="group inline-flex items-center font-semibold text-primary">
-              See full specs and pricing
+              See full specs
               <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>

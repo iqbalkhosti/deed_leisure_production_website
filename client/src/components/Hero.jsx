@@ -5,7 +5,7 @@ import GarmentShowcase from './GarmentShowcase';
 import site from '../data/site';
 
 const PROOF = [
-  { icon: BadgeCheck, label: `Minimum order ${site.minimumOrder} pieces` },
+  { icon: BadgeCheck, label: 'No minimum order' },
   { icon: Truck, label: site.standardTurnaround },
   { icon: Palette, label: 'Free mockup before you pay' },
 ];

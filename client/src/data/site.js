@@ -32,7 +32,6 @@ export const site = {
   ],
 
   // Shown across the site so buyers know what to expect before they ask.
-  minimumOrder: 12,
   standardTurnaround: '2–3 weeks after artwork approval',
   rushTurnaround: '7–10 business days',
 };

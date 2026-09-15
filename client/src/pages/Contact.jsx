@@ -119,7 +119,7 @@ export default function Contact() {
                   value={form.quantity}
                   onChange={update('quantity')}
                   inputMode="numeric"
-                  placeholder={`${site.minimumOrder}+`}
+                  placeholder="Any quantity"
                   className={field}
                 />
               </label>
