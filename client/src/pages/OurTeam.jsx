@@ -35,7 +35,7 @@ export default function OurTeam() {
       role: 'Chief Financial Officer',
       bio: 'Jedrek manages our financial operations, ensuring we maintain fiscal responsibility while supporting strategic growth initiatives.',
       image: '/team/jedrek.jpg',
-      email: 'jedrek@apparelbrand.com',
+      email: 'jed@pksportswear.ca',
       linkedin: 'https://www.linkedin.com/in/jedrekmartin/'
     },
   
