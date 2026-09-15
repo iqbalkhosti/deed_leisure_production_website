@@ -15,53 +15,30 @@ export default function OurTeam() {
   // Sample team members data
   const teamMembers = [
     {
-      name: 'Alex Johnson',
-      role: 'Founder & Creative Director',
-      bio: 'With over 15 years in the apparel industry, Alex founded the company with a vision to create high-quality custom apparel that tells a story.',
-      image: '/team/alex.jpg',
-      email: 'alex@apparelbrand.com',
-      linkedin: 'https://linkedin.com/in/alexjohnson'
+      name: 'Iqbal Khosti',
+      role: 'Founder & Operations Director',
+      bio: 'With over 3 years in the apparel industry, Iqbal founded the company with a vision to create high-quality custom apparel that tells a story.',
+      image: '/team/iqbal.jpg',
+      email: 'info@deedleisure.ca',
+      linkedin: 'https://linkedin.com/in/iqbalkhosti'
     },
     {
-      name: 'Sarah Chen',
-      role: 'Head of Design',
-      bio: 'Sarah brings her background in fashion design and digital illustration to create stunning, print-ready artwork for our clients.',
-      image: '/team/sarah.jpg',
-      email: 'sarah@apparelbrand.com',
-      linkedin: 'https://linkedin.com/in/sarahchen'
+      name: 'Kevin Massey',
+      role: 'Chief Relations Officer',
+      bio: 'Kevin brings his experience in client relations and business development to strengthen our partnerships and drive growth.',
+      image: '/team/kevin.jpg',
+      email: 'partnerships@deedleisure.ca',
+      linkedin: 'https://www.linkedin.com/in/kevintheinnovator/'
     },
     {
-      name: 'Michael Rodriguez',
-      role: 'Production Manager',
-      bio: 'Michael ensures every order is produced to our exacting standards, overseeing the printing, quality control, and fulfillment processes.',
-      image: '/team/michael.jpg',
-      email: 'michael@apparelbrand.com',
-      linkedin: 'https://linkedin.com/in/michaelrodriguez'
+      name: 'Jedrek Martin',
+      role: 'Chief Financial Officer',
+      bio: 'Jedrek manages our financial operations, ensuring we maintain fiscal responsibility while supporting strategic growth initiatives.',
+      image: '/team/jedrek.jpg',
+      email: 'jedrek@apparelbrand.com',
+      linkedin: 'https://www.linkedin.com/in/jedrekmartin/'
     },
-    {
-      name: 'Jamie Taylor',
-      role: 'Client Success Manager',
-      bio: 'Jamie works directly with clients to understand their needs and guide them through the design and ordering process.',
-      image: '/team/jamie.jpg',
-      email: 'jamie@apparelbrand.com',
-      linkedin: 'https://linkedin.com/in/jamietaylor'
-    },
-    {
-      name: 'Priya Patel',
-      role: 'Marketing Specialist',
-      bio: 'Priya handles our digital presence, content creation, and helps clients showcase their custom apparel through various channels.',
-      image: '/team/priya.jpg',
-      email: 'priya@apparelbrand.com',
-      linkedin: 'https://linkedin.com/in/priyapatel'
-    },
-    {
-      name: 'David Wilson',
-      role: 'Technical Designer',
-      bio: 'David specializes in preparing artwork for various printing methods, ensuring designs look their best on every product.',
-      image: '/team/david.jpg',
-      email: 'david@apparelbrand.com',
-      linkedin: 'https://linkedin.com/in/davidwilson'
-    }
+  
   ];
 
   // Company values
