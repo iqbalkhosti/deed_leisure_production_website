@@ -68,9 +68,17 @@ export default function OurTeam() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Team</h1>
-            <p className="text-lg text-gray-600">
-              Meet the passionate individuals behind your custom apparel. Our diverse team brings together expertise in design, production, and customer service to deliver exceptional results.
+            <p className="text-lg text-gray-600 mb-8">
+              Three of us, based in Durham Region, handling everything from artwork to the boxes
+              that land on your doorstep.
             </p>
+            <img
+              src="/team/group.jpg"
+              alt="The Deed Leisure team together in the shop"
+              width="1400"
+              height="1050"
+              className="mx-auto w-full max-w-2xl rounded-2xl shadow-sm"
+            />
           </div>
         </div>
       </section>
@@ -85,15 +93,19 @@ export default function OurTeam() {
                 className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center text-center"
               >
                 {/* Circular avatar */}
-                <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-primary/20 mb-4 flex-shrink-0">
+                <div className="relative mb-4 h-28 w-28 flex-shrink-0 overflow-hidden rounded-full bg-primary/10 ring-4 ring-primary/20">
+                  <span className="absolute inset-0 grid place-items-center text-2xl font-semibold text-primary" aria-hidden="true">
+                    {member.name.split(' ').map((part) => part[0]).join('')}
+                  </span>
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = `https://placehold.co/200x200/e0e7ff/4f46e5?text=${member.name.split(' ').map(n => n[0]).join('')}`;
-                    }}
+                    width="600"
+                    height="600"
+                    loading="lazy"
+                    decoding="async"
+                    className="relative h-full w-full object-cover"
+                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
                   />
                 </div>
                 <h3 className="text-lg font-semibold mb-0.5">{member.name}</h3>

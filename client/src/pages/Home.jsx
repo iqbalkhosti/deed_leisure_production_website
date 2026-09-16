@@ -4,6 +4,7 @@ import { ArrowRight, Users, Briefcase, GraduationCap } from 'lucide-react';
 import Hero from '../components/Hero';
 import Steps from '../components/Steps';
 import DesignStudioCTA from '../components/DesignStudioCTA';
+import WorkGallery from '../components/WorkGallery';
 import GarmentShowcase from '../components/GarmentShowcase';
 import ChatBot from '../components/ChatBot';
 import useSeo from '../hooks/useSeo';
@@ -87,6 +88,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <WorkGallery />
 
       <DesignStudioCTA />
 
