@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Shirt } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import site from '../data/site';
 
 const LINKS = [
@@ -34,9 +34,13 @@ export default function Navbar() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">
             <Link to="/" className="flex items-center gap-2 text-xl font-bold text-gray-900 transition-colors hover:text-primary">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-900">
-                <Shirt className="h-4 w-4 text-white" />
-              </span>
+              <img
+                src="/logo.png"
+                alt=""
+                width="343"
+                height="400"
+                className="h-8 w-auto"
+              />
               {site.name}
             </Link>
 

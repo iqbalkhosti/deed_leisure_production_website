@@ -33,7 +33,10 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="mb-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <h2 className="mb-4 text-xl font-bold">{site.name}</h2>
+            <h2 className="mb-4 flex items-center gap-2.5 text-xl font-bold">
+              <img src="/logo-light.png" alt="" width="343" height="400" className="h-9 w-auto" />
+              {site.name}
+            </h2>
             <p className="mb-6 text-gray-400">{site.description}</p>
             <div className="flex space-x-4">
               {site.socials.map((social) => {

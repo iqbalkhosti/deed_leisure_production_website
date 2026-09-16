@@ -43,6 +43,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <Hero />
+      <WorkGallery />
       <Steps />
 
       <section className="bg-white py-16">
@@ -88,8 +89,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <WorkGallery />
 
       <DesignStudioCTA />
 
